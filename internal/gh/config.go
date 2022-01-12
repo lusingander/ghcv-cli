@@ -19,7 +19,7 @@ func configFilePath() (string, error) {
 	return path, nil
 }
 
-func loadConfig() (*GithubConfig, error) {
+func LoadConfig() (*GithubConfig, error) {
 	path, err := configFilePath()
 	if err != nil {
 		return nil, err
@@ -38,4 +38,19 @@ func loadConfig() (*GithubConfig, error) {
 	}
 
 	return &cfg, nil
+}
+
+func SaveConfig(cfg *GithubConfig) error {
+	path, err := configFilePath()
+	if err != nil {
+		return err
+	}
+	bytes, err := json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
+	}
+	return os.WriteFile(path, bytes, 0666)
 }
