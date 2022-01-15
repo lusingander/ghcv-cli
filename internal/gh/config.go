@@ -6,6 +6,10 @@ import (
 	"path/filepath"
 )
 
+const (
+	accessTokenEnvKey = "GHCV_GITHUB_ACCESS_TOKEN"
+)
+
 type GithubConfig struct {
 	AccessToken string `json:"access_token"`
 }
@@ -20,6 +24,24 @@ func configFilePath() (string, error) {
 }
 
 func LoadConfig() (*GithubConfig, error) {
+	cfg := loadConfigFromEnv()
+	if cfg != nil {
+		return cfg, nil
+	}
+	return loadConfigFromFile()
+}
+
+func loadConfigFromEnv() *GithubConfig {
+	token, exist := os.LookupEnv(accessTokenEnvKey)
+	if !exist {
+		return nil
+	}
+	return &GithubConfig{
+		AccessToken: token,
+	}
+}
+
+func loadConfigFromFile() (*GithubConfig, error) {
 	path, err := configFilePath()
 	if err != nil {
 		return nil, err
