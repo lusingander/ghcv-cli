@@ -363,3 +363,146 @@ func (c *GitHubClient) queryUserPullRequests(id, cursorAfter string) (*userPullR
 	}
 	return &query, nil
 }
+
+func (c *GitHubClient) QueryUserRepositories(id string) (*UserRepositories, error) {
+	q, err := c.queryUserRepositories(id, "")
+	if err != nil {
+		return nil, err
+	}
+	hasNext := bool(q.User.Repositories.PageInfo.HasNextPage)
+	cursor := string(q.User.Repositories.PageInfo.EndCursor)
+	for hasNext {
+		qq, err := c.queryUserRepositories(id, cursor)
+		if err != nil {
+			return nil, err
+		}
+		hasNext = bool(qq.User.Repositories.PageInfo.HasNextPage)
+		cursor = string(qq.User.Repositories.PageInfo.EndCursor)
+		q.merge(qq)
+	}
+	return q.toUserRepositories(), nil
+}
+
+func (c *GitHubClient) queryUserRepositories(id, cursorAfter string) (*userRepositoriesQuery, error) {
+	var query userRepositoriesQuery
+	variables := map[string]interface{}{
+		"login": githubv4.String(id),
+		"first": githubv4.Int(50),
+	}
+	if cursorAfter == "" {
+		variables["after"] = (*githubv4.String)(nil)
+	} else {
+		variables["after"] = githubv4.String(cursorAfter)
+	}
+	if err := c.client.Query(context.Background(), &query, variables); err != nil {
+		return nil, err
+	}
+	return &query, nil
+}
+
+type UserRepositories struct {
+	TotalCount   int
+	Repositories []*UserRepository
+}
+
+type UserRepository struct {
+	Name               string
+	Description        string
+	Url                string
+	Watchers           int
+	Stars              int
+	Forks              int
+	LangName           string
+	LangColor          string
+	OpenedIssues       int
+	OpenedPullRequests int
+	License            string
+	CreatedAt          time.Time
+	PushedAt           time.Time
+}
+
+type userRepositoriesQuery struct {
+	User struct {
+		Repositories struct {
+			TotalCount githubv4.Int
+			PageInfo   pageInfo
+			Edges      []userRepositoriesQueryEdge
+		} `graphql:"repositories(orderBy:{direction:DESC,field:STARGAZERS},privacy:PUBLIC,isFork:false,first:$first,after:$after)"`
+	} `graphql:"user(login:$login)"`
+}
+
+func (q *userRepositoriesQuery) merge(qq *userRepositoriesQuery) {
+	q.User.Repositories.TotalCount = qq.User.Repositories.TotalCount
+	q.User.Repositories.PageInfo = qq.User.Repositories.PageInfo
+	q.User.Repositories.Edges = append(q.User.Repositories.Edges, qq.User.Repositories.Edges...)
+}
+
+type pageInfo struct {
+	EndCursor       githubv4.String
+	HasNextPage     githubv4.Boolean
+	HasPreviousPage githubv4.Boolean
+	StartCursor     githubv4.String
+}
+
+type userRepositoriesQueryEdge struct {
+	Cursor githubv4.String
+	Node   struct {
+		Name            githubv4.String
+		Description     githubv4.String
+		Url             githubv4.String
+		PrimaryLanguage struct {
+			Name  githubv4.String
+			Color githubv4.String
+		}
+		Stargazers struct {
+			TotalCount githubv4.Int
+		}
+		Watchers struct {
+			TotalCount githubv4.Int
+		}
+		Issues struct {
+			TotalCount githubv4.Int
+		} `graphql:"issues(states:OPEN)"`
+		PullRequests struct {
+			TotalCount githubv4.Int
+		} `graphql:"pullRequests(states:OPEN)"`
+		ForkCount   githubv4.Int
+		LicenseInfo struct {
+			Name   githubv4.String
+			SpdxId githubv4.String // https://spdx.org/licenses
+		}
+		IsArchived githubv4.Boolean
+		IsFork     githubv4.Boolean
+		IsPrivate  githubv4.Boolean
+		IsTemplate githubv4.Boolean
+		PushedAt   githubv4.DateTime
+		CreatedAt  githubv4.DateTime
+	}
+}
+
+func (q *userRepositoriesQuery) toUserRepositories() *UserRepositories {
+	repositories := make([]*UserRepository, 0)
+	for _, edge := range q.User.Repositories.Edges {
+		r := edge.Node
+		repository := &UserRepository{
+			Name:               string(r.Name),
+			Description:        string(r.Description),
+			Url:                string(r.Url),
+			Watchers:           int(r.Watchers.TotalCount),
+			Stars:              int(r.Stargazers.TotalCount),
+			Forks:              int(r.ForkCount),
+			LangName:           string(r.PrimaryLanguage.Name),
+			LangColor:          string(r.PrimaryLanguage.Color),
+			OpenedIssues:       int(r.Issues.TotalCount),
+			OpenedPullRequests: int(r.PullRequests.TotalCount),
+			License:            string(r.LicenseInfo.SpdxId),
+			CreatedAt:          r.CreatedAt.Time,
+			PushedAt:           r.PushedAt.Time,
+		}
+		repositories = append(repositories, repository)
+	}
+	return &UserRepositories{
+		TotalCount:   int(q.User.Repositories.TotalCount),
+		Repositories: repositories,
+	}
+}
