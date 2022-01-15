@@ -35,6 +35,10 @@ func postLogin(url string, params url.Values) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("unexpected status code: %s", resp.Status)
+	}
+
 	return ioutil.ReadAll(resp.Body)
 }
 
