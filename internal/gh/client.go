@@ -140,23 +140,6 @@ type userPullRequestsQueryEdge struct {
 	}
 }
 
-func newEmptyUserPullRequestsQuery() *userPullRequestsQuery {
-	return &userPullRequestsQuery{
-		Search: struct {
-			IssueCount githubv4.Int
-			Edges      []userPullRequestsQueryEdge
-		}{
-			IssueCount: 0,
-			Edges:      make([]userPullRequestsQueryEdge, 0),
-		},
-	}
-}
-
-func (q *userPullRequestsQuery) merge(qq *userPullRequestsQuery) {
-	q.Search.IssueCount = qq.Search.IssueCount
-	q.Search.Edges = append(q.Search.Edges, qq.Search.Edges...)
-}
-
 type userPullRequestsQueryRepository struct {
 	Name        githubv4.String
 	Description githubv4.String
@@ -176,15 +159,54 @@ type userPullRequestsQueryRepository struct {
 	ForkCount githubv4.Int
 }
 
+func newEmptyUserPullRequestsQuery() *userPullRequestsQuery {
+	return &userPullRequestsQuery{
+		Search: struct {
+			IssueCount githubv4.Int
+			Edges      []userPullRequestsQueryEdge
+		}{
+			IssueCount: 0,
+			Edges:      make([]userPullRequestsQueryEdge, 0),
+		},
+	}
+}
+
+func (q *userPullRequestsQuery) merge(qq *userPullRequestsQuery) {
+	q.Search.IssueCount = qq.Search.IssueCount
+	q.Search.Edges = append(q.Search.Edges, qq.Search.Edges...)
+}
+
+type repoNodesMap struct {
+	*linkedhashmap.Map
+}
+
+func newRepoNodesMap() *repoNodesMap {
+	return &repoNodesMap{linkedhashmap.New()}
+}
+
+func (m *repoNodesMap) Exist(key string) bool {
+	_, ok := m.Map.Get(key)
+	return ok
+}
+
+func (m *repoNodesMap) Get(key string) userPullRequestsQueryRepository {
+	node, _ := m.Map.Get(key)
+	return node.(userPullRequestsQueryRepository)
+}
+
+func (m *repoNodesMap) Put(key string, value userPullRequestsQueryRepository) {
+	m.Map.Put(key, value)
+}
+
 func (q *userPullRequestsQuery) toUserPullRequests() *UserPullRequests {
-	repoNodesMap := linkedhashmap.New()
+	rnMap := newRepoNodesMap()
 	for _, edge := range q.Search.Edges {
 		repo := edge.Node.PullRequest.Repository
 		ownerName := string(repo.Owner.Login)
 		repoName := string(repo.Name)
 		key := fmt.Sprintf("%s/%s", ownerName, repoName)
-		if _, ok := repoNodesMap.Get(key); !ok {
-			repoNodesMap.Put(key, repo)
+		if !rnMap.Exist(key) {
+			rnMap.Put(key, repo)
 		}
 	}
 
@@ -224,8 +246,7 @@ func (q *userPullRequestsQuery) toUserPullRequests() *UserPullRequests {
 		repoMap, _ := ownerMap.Get(ownerName)
 		for _, repoName := range repoMap.(*linkedhashmap.Map).Keys() {
 			key := fmt.Sprintf("%s/%s", ownerName, repoName)
-			repoNode, _ := repoNodesMap.Get(key)
-			rn := repoNode.(userPullRequestsQueryRepository)
+			rn := rnMap.Get(key)
 			prs, _ := repoMap.(*linkedhashmap.Map).Get(repoName)
 			repository := &UserPullRequestsRepository{
 				Name:         string(rn.Name),
