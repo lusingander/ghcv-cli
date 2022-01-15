@@ -3,6 +3,7 @@ package gh
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/emirpasic/gods/maps/linkedhashmap"
@@ -112,29 +113,48 @@ type UserPullRequestsPullRequest struct {
 type userPullRequestsQuery struct {
 	Search struct {
 		IssueCount githubv4.Int
-		Edges      []struct {
-			Cursor githubv4.String
-			Node   struct {
-				PullRequest struct {
-					Title     githubv4.String
-					State     githubv4.String
-					Number    githubv4.Int
-					Url       githubv4.String
-					Additions githubv4.Int
-					Deletions githubv4.Int
-					Comments  struct {
-						TotalCount githubv4.Int
-					}
-					Reviews struct {
-						TotalCount githubv4.Int
-					}
-					CreatedAt  githubv4.DateTime
-					ClosedAt   githubv4.DateTime
-					Repository userPullRequestsQueryRepository
-				} `graphql:"... on PullRequest"`
-			}
-		}
+		Edges      []userPullRequestsQueryEdge
 	} `graphql:"search(query:$searchQuery,type:ISSUE,first:$first,after:$after)"`
+}
+
+type userPullRequestsQueryEdge struct {
+	Cursor githubv4.String
+	Node   struct {
+		PullRequest struct {
+			Title     githubv4.String
+			State     githubv4.String
+			Number    githubv4.Int
+			Url       githubv4.String
+			Additions githubv4.Int
+			Deletions githubv4.Int
+			Comments  struct {
+				TotalCount githubv4.Int
+			}
+			Reviews struct {
+				TotalCount githubv4.Int
+			}
+			CreatedAt  githubv4.DateTime
+			ClosedAt   githubv4.DateTime
+			Repository userPullRequestsQueryRepository
+		} `graphql:"... on PullRequest"`
+	}
+}
+
+func newEmptyUserPullRequestsQuery() *userPullRequestsQuery {
+	return &userPullRequestsQuery{
+		Search: struct {
+			IssueCount githubv4.Int
+			Edges      []userPullRequestsQueryEdge
+		}{
+			IssueCount: 0,
+			Edges:      make([]userPullRequestsQueryEdge, 0),
+		},
+	}
+}
+
+func (q *userPullRequestsQuery) merge(qq *userPullRequestsQuery) {
+	q.Search.IssueCount = qq.Search.IssueCount
+	q.Search.Edges = append(q.Search.Edges, qq.Search.Edges...)
 }
 
 type userPullRequestsQueryRepository struct {
@@ -234,15 +254,38 @@ func (q *userPullRequestsQuery) toUserPullRequests() *UserPullRequests {
 }
 
 func (c *GitHubClient) QueryUserPullRequests(id string) (*UserPullRequests, error) {
+	q := newEmptyUserPullRequestsQuery()
+	issueCount := math.MaxInt32
+	total := 0
+	cursor := ""
+	for total < issueCount {
+		qq, err := c.queryUserPullRequests(id, cursor)
+		if err != nil {
+			return nil, err
+		}
+		issueCount = int(qq.Search.IssueCount)
+		edges := qq.Search.Edges
+		cursor = string(edges[len(edges)-1].Cursor)
+		total += len(edges)
+		q.merge(qq)
+	}
+	return q.toUserPullRequests(), nil
+}
+
+func (c *GitHubClient) queryUserPullRequests(id string, cursorAfter string) (*userPullRequestsQuery, error) {
 	searchQuery := fmt.Sprintf("author:%s -user:%s is:pr sort:created-desc", id, id)
 	var query userPullRequestsQuery
 	variables := map[string]interface{}{
 		"searchQuery": githubv4.String(searchQuery),
 		"first":       githubv4.Int(50),
-		"after":       (*githubv4.String)(nil),
+	}
+	if cursorAfter == "" {
+		variables["after"] = (*githubv4.String)(nil)
+	} else {
+		variables["after"] = githubv4.String(cursorAfter)
 	}
 	if err := c.client.Query(context.Background(), &query, variables); err != nil {
 		return nil, err
 	}
-	return query.toUserPullRequests(), nil
+	return &query, nil
 }
