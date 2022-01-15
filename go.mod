@@ -3,6 +3,7 @@ module github.com/lusingander/ghcv-cli
 go 1.17
 
 require (
+	github.com/emirpasic/gods v1.12.0
 	github.com/shurcooL/githubv4 v0.0.0-20220106005112-0707a5a90543
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 )

@@ -2,10 +2,21 @@ package gh
 
 import (
 	"context"
+	"fmt"
+	"time"
 
+	"github.com/emirpasic/gods/maps/linkedhashmap"
 	"github.com/shurcooL/githubv4"
 	"golang.org/x/oauth2"
 )
+
+const (
+	githubBaseUrl = "https://github.com"
+)
+
+func repositoryUrl(owner, repo string) string {
+	return fmt.Sprintf("%s/%s/%s", githubBaseUrl, owner, repo)
+}
 
 type GitHubClient struct {
 	client *githubv4.Client
@@ -62,4 +73,237 @@ func (c *GitHubClient) QueryUserProfile(id string) (*UserProfile, error) {
 		return nil, err
 	}
 	return query.toUserProfile(), nil
+}
+
+type UserPullRequests struct {
+	TotalCount int
+	Owners     []*UserPullRequestsOwner
+}
+
+type UserPullRequestsOwner struct {
+	Name         string
+	Repositories []*UserPullRequestsRepository
+}
+
+type UserPullRequestsRepository struct {
+	Name         string
+	Description  string
+	Url          string
+	Watchers     int
+	Stars        int
+	Forks        int
+	LangName     string
+	LangColor    string
+	PullRequests []*UserPullRequestsPullRequest
+}
+
+type UserPullRequestsPullRequest struct {
+	Title     string
+	State     string
+	Number    int
+	Url       string
+	Additions int
+	Deletions int
+	Comments  int
+	CretaedAt time.Time
+	ClosedAt  time.Time
+}
+
+type userPullRequestsQuery struct {
+	Search struct {
+		IssueCount githubv4.Int
+		Edges      []struct {
+			Cursor githubv4.String
+			Node   struct {
+				PullRequest struct {
+					Title     githubv4.String
+					State     githubv4.String
+					Number    githubv4.Int
+					Url       githubv4.String
+					Additions githubv4.Int
+					Deletions githubv4.Int
+					Comments  struct {
+						TotalCount githubv4.Int
+					}
+					Reviews struct {
+						TotalCount githubv4.Int
+					}
+					CreatedAt  githubv4.DateTime
+					ClosedAt   githubv4.DateTime
+					Repository struct {
+						Name  githubv4.String
+						Owner struct {
+							Login githubv4.String
+						}
+					}
+				} `graphql:"... on PullRequest"`
+			}
+		}
+	} `graphql:"search(query:$searchQuery,type:ISSUE,first:$first,after:$after)"`
+}
+
+func (q *userPullRequestsQuery) ownerRepoPairs() []*ownerRepoPair {
+	ret := make([]*ownerRepoPair, 0)
+	for _, edge := range q.Search.Edges {
+		pr := edge.Node.PullRequest
+		pair := &ownerRepoPair{
+			owner: string(pr.Repository.Owner.Login),
+			repo:  string(pr.Repository.Name),
+		}
+		ret = append(ret, pair)
+	}
+	return ret
+}
+
+func (q *userPullRequestsQuery) toUserPullRequests(rq *repositoriesQuery) *UserPullRequests {
+	repoNodesMap := linkedhashmap.New()
+	for _, repo := range rq.Search.Nodes {
+		ownerName := string(repo.Repository.Owner.Login)
+		repoName := string(repo.Repository.Name)
+		key := fmt.Sprintf("%s/%s", ownerName, repoName)
+		repoNodesMap.Put(key, repo)
+	}
+
+	ownerMap := linkedhashmap.New()
+	for _, edge := range q.Search.Edges {
+		pn := edge.Node.PullRequest
+		ownerName := string(pn.Repository.Owner.Login)
+		repoName := string(pn.Repository.Name)
+		repoMap, ok := ownerMap.Get(ownerName)
+		if !ok {
+			repoMap = linkedhashmap.New()
+			ownerMap.Put(ownerName, repoMap)
+		}
+		prs, ok := repoMap.(*linkedhashmap.Map).Get(repoName)
+		if !ok {
+			prs = make([]*UserPullRequestsPullRequest, 0)
+		}
+		pullRequest := &UserPullRequestsPullRequest{
+			Title:     string(pn.Title),
+			State:     string(pn.State),
+			Number:    int(pn.Number),
+			Url:       string(pn.Url),
+			Additions: int(pn.Additions),
+			Deletions: int(pn.Deletions),
+			Comments:  int(pn.Comments.TotalCount),
+			CretaedAt: pn.CreatedAt.Time,
+			ClosedAt:  pn.ClosedAt.Time,
+		}
+		pullRequests := prs.([]*UserPullRequestsPullRequest)
+		pullRequests = append(pullRequests, pullRequest)
+		repoMap.(*linkedhashmap.Map).Put(repoName, pullRequests)
+	}
+
+	owners := make([]*UserPullRequestsOwner, 0)
+	for _, ownerName := range ownerMap.Keys() {
+		repositories := make([]*UserPullRequestsRepository, 0)
+		repoMap, _ := ownerMap.Get(ownerName)
+		for _, repoName := range repoMap.(*linkedhashmap.Map).Keys() {
+			key := fmt.Sprintf("%s/%s", ownerName, repoName)
+			repoNode, _ := repoNodesMap.Get(key)
+			rn := repoNode.(repositoriesQueryRepositoryNode).Repository
+			prs, _ := repoMap.(*linkedhashmap.Map).Get(repoName)
+			repository := &UserPullRequestsRepository{
+				Name:         string(rn.Name),
+				Description:  string(rn.Description),
+				Url:          repositoryUrl(ownerName.(string), repoName.(string)),
+				Watchers:     int(rn.Watchers.TotalCount),
+				Stars:        int(rn.Stargazers.TotalCount),
+				Forks:        int(rn.ForkCount),
+				LangName:     string(rn.PrimaryLanguage.Name),
+				LangColor:    string(rn.PrimaryLanguage.Color),
+				PullRequests: prs.([]*UserPullRequestsPullRequest),
+			}
+			repositories = append(repositories, repository)
+		}
+		owner := &UserPullRequestsOwner{
+			Name:         ownerName.(string),
+			Repositories: repositories,
+		}
+		owners = append(owners, owner)
+	}
+	ret := &UserPullRequests{
+		TotalCount: int(q.Search.IssueCount),
+		Owners:     owners,
+	}
+	return ret
+}
+
+type repositoriesQuery struct {
+	Search struct {
+		Nodes []repositoriesQueryRepositoryNode
+	} `graphql:"search(query:$searchQuery,type:REPOSITORY,first:$first,after:$after)"`
+}
+
+type repositoriesQueryRepositoryNode struct {
+	Repository struct {
+		Name        githubv4.String
+		Description githubv4.String
+		Owner       struct {
+			Login githubv4.String
+		}
+		PrimaryLanguage struct {
+			Name  githubv4.String
+			Color githubv4.String
+		}
+		Stargazers struct {
+			TotalCount githubv4.Int
+		}
+		Watchers struct {
+			TotalCount githubv4.Int
+		}
+		ForkCount githubv4.Int
+	} `graphql:"... on Repository"`
+}
+
+func (c *GitHubClient) QueryUserPullRequests(id string) (*UserPullRequests, error) {
+	pq, err := c.queryUserPullRequests(id)
+	if err != nil {
+		return nil, err
+	}
+	rq, err := c.queryRepositories(pq.ownerRepoPairs())
+	if err != nil {
+		return nil, err
+	}
+	return pq.toUserPullRequests(rq), nil
+}
+
+func (c *GitHubClient) queryUserPullRequests(id string) (*userPullRequestsQuery, error) {
+	searchQuery := fmt.Sprintf("author:%s -user:%s is:pr sort:created-desc", id, id)
+	var query userPullRequestsQuery
+	variables := map[string]interface{}{
+		"searchQuery": githubv4.String(searchQuery),
+		"first":       githubv4.Int(50),
+		"after":       (*githubv4.String)(nil),
+	}
+	if err := c.client.Query(context.Background(), &query, variables); err != nil {
+		return nil, err
+	}
+	return &query, nil
+}
+
+type ownerRepoPair struct {
+	owner string
+	repo  string
+}
+
+func (p *ownerRepoPair) toQuery() string {
+	return fmt.Sprintf("repo:%s/%s ", p.owner, p.repo)
+}
+
+func (c *GitHubClient) queryRepositories(ors []*ownerRepoPair) (*repositoriesQuery, error) {
+	searchQuery := ""
+	for _, or := range ors {
+		searchQuery += or.toQuery()
+	}
+	var query repositoriesQuery
+	variables := map[string]interface{}{
+		"searchQuery": githubv4.String(searchQuery),
+		"first":       githubv4.Int(50),
+		"after":       (*githubv4.String)(nil),
+	}
+	if err := c.client.Query(context.Background(), &query, variables); err != nil {
+		return nil, err
+	}
+	return &query, nil
 }
