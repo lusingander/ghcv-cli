@@ -198,6 +198,68 @@ func (m *repoNodesMap) Put(key string, value userPullRequestsQueryRepository) {
 	m.Map.Put(key, value)
 }
 
+type ownerMap struct {
+	*linkedhashmap.Map
+}
+
+func newOwnerMap() *ownerMap {
+	return &ownerMap{linkedhashmap.New()}
+}
+
+func (m *ownerMap) Exist(key string) bool {
+	_, ok := m.Map.Get(key)
+	return ok
+}
+
+func (m *ownerMap) Get(key string) *repoMap {
+	prs, _ := m.Map.Get(key)
+	return prs.(*repoMap)
+}
+
+func (m *ownerMap) Put(key string, value *repoMap) {
+	m.Map.Put(key, value)
+}
+
+func (m *ownerMap) Keys() []string {
+	keys := m.Map.Keys()
+	ret := make([]string, len(keys))
+	for i, key := range keys {
+		ret[i] = key.(string)
+	}
+	return ret
+}
+
+type repoMap struct {
+	*linkedhashmap.Map
+}
+
+func newRepoMap() *repoMap {
+	return &repoMap{linkedhashmap.New()}
+}
+
+func (m *repoMap) Exist(key string) bool {
+	_, ok := m.Map.Get(key)
+	return ok
+}
+
+func (m *repoMap) Get(key string) []*UserPullRequestsPullRequest {
+	prs, _ := m.Map.Get(key)
+	return prs.([]*UserPullRequestsPullRequest)
+}
+
+func (m *repoMap) Put(key string, value []*UserPullRequestsPullRequest) {
+	m.Map.Put(key, value)
+}
+
+func (m *repoMap) Keys() []string {
+	keys := m.Map.Keys()
+	ret := make([]string, len(keys))
+	for i, key := range keys {
+		ret[i] = key.(string)
+	}
+	return ret
+}
+
 func (q *userPullRequestsQuery) toUserPullRequests() *UserPullRequests {
 	rnMap := newRepoNodesMap()
 	for _, edge := range q.Search.Edges {
@@ -210,20 +272,19 @@ func (q *userPullRequestsQuery) toUserPullRequests() *UserPullRequests {
 		}
 	}
 
-	ownerMap := linkedhashmap.New()
+	ownerMap := newOwnerMap()
 	for _, edge := range q.Search.Edges {
 		pn := edge.Node.PullRequest
 		ownerName := string(pn.Repository.Owner.Login)
 		repoName := string(pn.Repository.Name)
-		repoMap, ok := ownerMap.Get(ownerName)
-		if !ok {
-			repoMap = linkedhashmap.New()
-			ownerMap.Put(ownerName, repoMap)
+		if !ownerMap.Exist(ownerName) {
+			ownerMap.Put(ownerName, newRepoMap())
 		}
-		prs, ok := repoMap.(*linkedhashmap.Map).Get(repoName)
-		if !ok {
-			prs = make([]*UserPullRequestsPullRequest, 0)
+		repoMap := ownerMap.Get(ownerName)
+		if !repoMap.Exist(repoName) {
+			repoMap.Put(repoName, make([]*UserPullRequestsPullRequest, 0))
 		}
+		pullRequests := repoMap.Get(repoName)
 		pullRequest := &UserPullRequestsPullRequest{
 			Title:     string(pn.Title),
 			State:     string(pn.State),
@@ -235,34 +296,33 @@ func (q *userPullRequestsQuery) toUserPullRequests() *UserPullRequests {
 			CretaedAt: pn.CreatedAt.Time,
 			ClosedAt:  pn.ClosedAt.Time,
 		}
-		pullRequests := prs.([]*UserPullRequestsPullRequest)
 		pullRequests = append(pullRequests, pullRequest)
-		repoMap.(*linkedhashmap.Map).Put(repoName, pullRequests)
+		repoMap.Put(repoName, pullRequests)
 	}
 
 	owners := make([]*UserPullRequestsOwner, 0)
 	for _, ownerName := range ownerMap.Keys() {
 		repositories := make([]*UserPullRequestsRepository, 0)
-		repoMap, _ := ownerMap.Get(ownerName)
-		for _, repoName := range repoMap.(*linkedhashmap.Map).Keys() {
+		repoMap := ownerMap.Get(ownerName)
+		for _, repoName := range repoMap.Keys() {
 			key := fmt.Sprintf("%s/%s", ownerName, repoName)
 			rn := rnMap.Get(key)
-			prs, _ := repoMap.(*linkedhashmap.Map).Get(repoName)
+			prs := repoMap.Get(repoName)
 			repository := &UserPullRequestsRepository{
 				Name:         string(rn.Name),
 				Description:  string(rn.Description),
-				Url:          repositoryUrl(ownerName.(string), repoName.(string)),
+				Url:          repositoryUrl(ownerName, repoName),
 				Watchers:     int(rn.Watchers.TotalCount),
 				Stars:        int(rn.Stargazers.TotalCount),
 				Forks:        int(rn.ForkCount),
 				LangName:     string(rn.PrimaryLanguage.Name),
 				LangColor:    string(rn.PrimaryLanguage.Color),
-				PullRequests: prs.([]*UserPullRequestsPullRequest),
+				PullRequests: prs,
 			}
 			repositories = append(repositories, repository)
 		}
 		owner := &UserPullRequestsOwner{
-			Name:         ownerName.(string),
+			Name:         ownerName,
 			Repositories: repositories,
 		}
 		owners = append(owners, owner)
