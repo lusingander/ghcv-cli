@@ -346,7 +346,7 @@ func (c *GitHubClient) QueryUserPullRequests(id string) (*UserPullRequests, erro
 	return q.toUserPullRequests(), nil
 }
 
-func (c *GitHubClient) queryUserPullRequests(id string, cursorAfter string) (*userPullRequestsQuery, error) {
+func (c *GitHubClient) queryUserPullRequests(id, cursorAfter string) (*userPullRequestsQuery, error) {
 	searchQuery := fmt.Sprintf("author:%s -user:%s is:pr sort:created-desc", id, id)
 	var query userPullRequestsQuery
 	variables := map[string]interface{}{
