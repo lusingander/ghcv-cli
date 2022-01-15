@@ -11,14 +11,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	githubBaseUrl = "https://github.com"
-)
-
-func repositoryUrl(owner, repo string) string {
-	return fmt.Sprintf("%s/%s/%s", githubBaseUrl, owner, repo)
-}
-
 type GitHubClient struct {
 	client *githubv4.Client
 }
@@ -143,6 +135,7 @@ type userPullRequestsQueryEdge struct {
 type userPullRequestsQueryRepository struct {
 	Name        githubv4.String
 	Description githubv4.String
+	Url         githubv4.String
 	Owner       struct {
 		Login githubv4.String
 	}
@@ -311,7 +304,7 @@ func (q *userPullRequestsQuery) toUserPullRequests() *UserPullRequests {
 			repository := &UserPullRequestsRepository{
 				Name:         string(rn.Name),
 				Description:  string(rn.Description),
-				Url:          repositoryUrl(ownerName, repoName),
+				Url:          string(rn.Url),
 				Watchers:     int(rn.Watchers.TotalCount),
 				Stars:        int(rn.Stargazers.TotalCount),
 				Forks:        int(rn.ForkCount),
