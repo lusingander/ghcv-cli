@@ -77,7 +77,7 @@ func newUserSelectModel(client *gh.GitHubClient) userSelectModel {
 			key.WithHelp("?", "toggle help"),
 		),
 		Quit: key.NewBinding(
-			key.WithKeys("ctrl+c"),
+			key.WithKeys("ctrl+c", "esc"),
 			key.WithHelp("ctrl+c", "quit"),
 		),
 	}
