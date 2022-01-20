@@ -1,5 +1,7 @@
 # ghcv-cli
 
+ghcv-cli makes it easy to view the user-created issues, pull requests, and repositories in the terminal.
+
 ## Setup
 
 You will need to authenticate with GitHub in order to use the application because GitHub GraphQL API [requires authentication](https://docs.github.com/en/graphql/guides/forming-calls-with-graphql#authenticating-with-graphql).
