@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lusingander/ghcv-cli/internal/gh"
@@ -25,25 +26,28 @@ type model struct {
 	client      *gh.GitHubClient
 	currentPage page
 
-	selectedUser string
+	userSelect   userSelectModel
+	menu         menuModel
+	repositories repositoriesModel
 
-	userSelect userSelectModel
-	menu       menuModel
+	spinner *spinner.Model
 }
 
 func newModel(client *gh.GitHubClient) model {
+	s := spinner.New()
+	s.Spinner = spinner.Moon
 	return model{
-		client:      client,
-		currentPage: userSelectPage,
-		userSelect:  newUserSelectModel(client),
-		menu:        newMenuModel(),
+		client:       client,
+		currentPage:  userSelectPage,
+		userSelect:   newUserSelectModel(client, &s),
+		menu:         newMenuModel(),
+		repositories: newRepositoriesModel(client, &s),
+		spinner:      &s,
 	}
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(
-		m.userSelect.spinner.Tick,
-	)
+	return m.spinner.Tick
 }
 
 type userSelectMsg struct {
@@ -56,7 +60,34 @@ func userSelected(id string) tea.Cmd {
 	return func() tea.Msg { return userSelectMsg{id} }
 }
 
+type selectRepositoriesPageMsg struct {
+	id string
+}
+
+var _ tea.Msg = (*selectRepositoriesPageMsg)(nil)
+
+func selectRepositoriesPage(id string) tea.Cmd {
+	return func() tea.Msg { return selectRepositoriesPageMsg{id} }
+}
+
+type goBackUserSelectPageMsg struct{}
+
+var _ tea.Msg = (*goBackUserSelectPageMsg)(nil)
+
+func goBackUserSelectPage() tea.Msg {
+	return goBackUserSelectPageMsg{}
+}
+
+type goBackMenuPageMsg struct{}
+
+var _ tea.Msg = (*goBackMenuPageMsg)(nil)
+
+func goBackMenuPage() tea.Msg {
+	return goBackMenuPageMsg{}
+}
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 	cmds := make([]tea.Cmd, 0)
 
 	switch msg := msg.(type) {
@@ -65,26 +96,38 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		}
+	case spinner.TickMsg:
+		*m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
 	case tea.WindowSizeMsg:
 		top, right, bottom, left := baseStyle.GetMargin()
 		width := msg.Width - left - right
 		height := msg.Height - top - bottom
 		m.menu.SetSize(width, height)
 		m.userSelect.SetSize(width, height)
+		m.repositories.SetSize(width, height)
 	case userSelectMsg:
-		m.selectedUser = msg.id
+		m.menu.selectedUser = msg.id
 		m.currentPage = menuPage
 		return m, nil
+	case selectRepositoriesPageMsg:
+		m.currentPage = repositoriesPage
+	case goBackUserSelectPageMsg:
+		m.userSelect.Reset()
+		m.currentPage = userSelectPage
+	case goBackMenuPageMsg:
+		m.currentPage = menuPage
 	}
 
 	switch m.currentPage {
 	case userSelectPage:
-		userSelect, cmd := m.userSelect.Update(msg)
-		m.userSelect = userSelect
+		m.userSelect, cmd = m.userSelect.Update(msg)
 		cmds = append(cmds, cmd)
 	case menuPage:
-		menu, cmd := m.menu.Update(msg)
-		m.menu = menu
+		m.menu, cmd = m.menu.Update(msg)
+		cmds = append(cmds, cmd)
+	case repositoriesPage:
+		m.repositories, cmd = m.repositories.Update(msg)
 		cmds = append(cmds, cmd)
 	default:
 		return m, nil
@@ -99,6 +142,8 @@ func (m model) View() string {
 		return baseStyle.Render(m.userSelect.View())
 	case menuPage:
 		return baseStyle.Render(m.menu.View())
+	case repositoriesPage:
+		return baseStyle.Render(m.repositories.View())
 	}
 	return baseStyle.Render("error... :(")
 }

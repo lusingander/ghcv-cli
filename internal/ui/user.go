@@ -33,7 +33,7 @@ type userSelectModel struct {
 	keys    userSelectKeyMap
 	input   textinput.Model
 	help    help.Model
-	spinner spinner.Model
+	spinner *spinner.Model
 
 	errorMsg      *userSelectErrorMsg
 	loading       bool
@@ -66,7 +66,7 @@ func (k userSelectKeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-func newUserSelectModel(client *gh.GitHubClient) userSelectModel {
+func newUserSelectModel(client *gh.GitHubClient, s *spinner.Model) userSelectModel {
 	userSelectKeys := userSelectKeyMap{
 		Enter: key.NewBinding(
 			key.WithKeys("enter"),
@@ -86,9 +86,6 @@ func newUserSelectModel(client *gh.GitHubClient) userSelectModel {
 	inputModel.Placeholder = "GitHub ID"
 	inputModel.Focus()
 
-	s := spinner.New()
-	s.Spinner = spinner.Moon
-
 	return userSelectModel{
 		client:  client,
 		keys:    userSelectKeys,
@@ -104,6 +101,11 @@ func (m *userSelectModel) SetSize(width, height int) {
 	m.help.Width = width
 }
 
+func (m *userSelectModel) Reset() {
+	m.input.Reset()
+	m.input.Focus()
+}
+
 func (m userSelectModel) Init() tea.Cmd {
 	return nil
 }
@@ -115,8 +117,8 @@ type userSelectSuccessMsg struct {
 var _ tea.Msg = (*userSelectSuccessMsg)(nil)
 
 type userSelectErrorMsg struct {
-	e      error
-	detail string
+	e       error
+	summary string
 }
 
 var _ tea.Msg = (*userSelectErrorMsg)(nil)
@@ -170,10 +172,6 @@ func (m userSelectModel) Update(msg tea.Msg) (userSelectModel, tea.Cmd) {
 	m.input = input
 	cmds = append(cmds, iCmd)
 
-	sp, sCmd := m.spinner.Update(msg)
-	m.spinner = sp
-	cmds = append(cmds, sCmd)
-
 	return m, tea.Batch(cmds...)
 }
 
@@ -204,7 +202,7 @@ func (m userSelectModel) View() string {
 	}
 
 	if m.errorMsg != nil {
-		errorText := inputErrorStyle.Render("ERROR: " + m.errorMsg.detail)
+		errorText := inputErrorStyle.Render("ERROR: " + m.errorMsg.summary)
 		ret += errorText
 		height -= cn(errorText)
 	}
