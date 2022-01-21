@@ -2,7 +2,10 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -24,9 +27,37 @@ var (
 				Bold(true)
 )
 
+type profileKeyMap struct {
+	Back key.Binding
+	Help key.Binding
+	Quit key.Binding
+}
+
+func (k profileKeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{
+		k.Back,
+		k.Help,
+		k.Quit,
+	}
+}
+
+func (k profileKeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{
+			k.Back,
+		},
+		{
+			k.Help,
+			k.Quit,
+		},
+	}
+}
+
 type profileModel struct {
 	client *gh.GitHubClient
 
+	keys    profileKeyMap
+	help    help.Model
 	profile *gh.UserProfile
 	spinner *spinner.Model
 
@@ -36,8 +67,24 @@ type profileModel struct {
 }
 
 func newProfileModel(client *gh.GitHubClient, s *spinner.Model) profileModel {
+	profileKeys := profileKeyMap{
+		Back: key.NewBinding(
+			key.WithKeys("backspace", "ctrl+h"),
+			key.WithHelp("backspace", "back"),
+		),
+		Help: key.NewBinding(
+			key.WithKeys("?"),
+			key.WithHelp("?", "toggle help"),
+		),
+		Quit: key.NewBinding(
+			key.WithKeys("ctrl+c", "esc"),
+			key.WithHelp("ctrl+c", "quit"),
+		),
+	}
 	return profileModel{
 		client:  client,
+		keys:    profileKeys,
+		help:    help.New(),
 		spinner: s,
 	}
 }
@@ -45,6 +92,7 @@ func newProfileModel(client *gh.GitHubClient, s *spinner.Model) profileModel {
 func (m *profileModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
+	m.help.Width = width
 }
 
 func (m *profileModel) updateProfile(profile *gh.UserProfile) {
@@ -80,6 +128,16 @@ func (m profileModel) loadProfile(id string) tea.Cmd {
 
 func (m profileModel) Update(msg tea.Msg) (profileModel, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch {
+		case key.Matches(msg, m.keys.Back):
+			return m, goBackMenuPage
+		case key.Matches(msg, m.keys.Help):
+			m.help.ShowAll = !m.help.ShowAll
+			return m, nil
+		case key.Matches(msg, m.keys.Quit):
+			return m, tea.Quit
+		}
 	case selectProfilePageMsg:
 		m.loading = true
 		return m, m.loadProfile(msg.id)
@@ -150,6 +208,12 @@ func (m profileModel) profieView() string {
 	ret += website
 	height -= cn(website)
 
+	help := helpStyle.Render(m.help.View(m.keys))
+	height -= cn(help)
+
+	ret += strings.Repeat("\n", height)
+	ret += help
+
 	return ret
 }
 
@@ -187,6 +251,12 @@ func (m profileModel) errorView() string {
 	errorText := profileErrorStyle.Render("ERROR: " + m.errorMsg.summary)
 	ret += errorText
 	height -= cn(errorText)
+
+	help := helpStyle.Render(m.help.View(m.keys))
+	height -= cn(help)
+
+	ret += strings.Repeat("\n", height)
+	ret += help
 
 	return ret
 }
