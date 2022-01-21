@@ -115,11 +115,11 @@ func (m repositoriesModel) Init() tea.Cmd {
 	return nil
 }
 
-type repositoresSuccessMsg struct {
+type repositoriesSuccessMsg struct {
 	repos *gh.UserRepositories
 }
 
-var _ tea.Msg = (*repositoresSuccessMsg)(nil)
+var _ tea.Msg = (*repositoriesSuccessMsg)(nil)
 
 type repositoriesErrorMsg struct {
 	e       error
@@ -138,7 +138,7 @@ func (m repositoriesModel) loadRepositores(id string) tea.Cmd {
 		if err != nil {
 			return repositoriesErrorMsg{err, "failed to fetch repositories"}
 		}
-		return repositoresSuccessMsg{repos}
+		return repositoriesSuccessMsg{repos}
 	}
 }
 
@@ -153,7 +153,7 @@ func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 	case selectRepositoriesPageMsg:
 		m.loading = true
 		return m, m.loadRepositores(msg.id)
-	case repositoresSuccessMsg:
+	case repositoriesSuccessMsg:
 		m.errorMsg = nil
 		m.loading = false
 		m.updateItems(msg.repos)
