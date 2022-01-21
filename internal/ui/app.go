@@ -28,6 +28,7 @@ type model struct {
 
 	userSelect   userSelectModel
 	menu         menuModel
+	profile      profileModel
 	repositories repositoriesModel
 
 	spinner *spinner.Model
@@ -41,6 +42,7 @@ func newModel(client *gh.GitHubClient) model {
 		currentPage:  userSelectPage,
 		userSelect:   newUserSelectModel(client, &s),
 		menu:         newMenuModel(),
+		profile:      newProfileModel(client, &s),
 		repositories: newRepositoriesModel(client, &s),
 		spinner:      &s,
 	}
@@ -68,6 +70,16 @@ var _ tea.Msg = (*selectRepositoriesPageMsg)(nil)
 
 func selectRepositoriesPage(id string) tea.Cmd {
 	return func() tea.Msg { return selectRepositoriesPageMsg{id} }
+}
+
+type selectProfilePageMsg struct {
+	id string
+}
+
+var _ tea.Msg = (*selectProfilePageMsg)(nil)
+
+func selectProfilePage(id string) tea.Cmd {
+	return func() tea.Msg { return selectProfilePageMsg{id} }
 }
 
 type goBackUserSelectPageMsg struct{}
@@ -105,11 +117,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		height := msg.Height - top - bottom
 		m.menu.SetSize(width, height)
 		m.userSelect.SetSize(width, height)
+		m.profile.SetSize(width, height)
 		m.repositories.SetSize(width, height)
 	case userSelectMsg:
 		m.menu.selectedUser = msg.id
 		m.currentPage = menuPage
 		return m, nil
+	case selectProfilePageMsg:
+		m.currentPage = profilePage
 	case selectRepositoriesPageMsg:
 		m.currentPage = repositoriesPage
 	case goBackUserSelectPageMsg:
@@ -125,6 +140,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	case menuPage:
 		m.menu, cmd = m.menu.Update(msg)
+		cmds = append(cmds, cmd)
+	case profilePage:
+		m.profile, cmd = m.profile.Update(msg)
 		cmds = append(cmds, cmd)
 	case repositoriesPage:
 		m.repositories, cmd = m.repositories.Update(msg)
@@ -142,6 +160,8 @@ func (m model) View() string {
 		return baseStyle.Render(m.userSelect.View())
 	case menuPage:
 		return baseStyle.Render(m.menu.View())
+	case profilePage:
+		return baseStyle.Render(m.profile.View())
 	case repositoriesPage:
 		return baseStyle.Render(m.repositories.View())
 	}

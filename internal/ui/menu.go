@@ -114,7 +114,7 @@ func (m menuModel) Update(msg tea.Msg) (menuModel, tea.Cmd) {
 		case key.Matches(msg, m.delegateKeys.open):
 			switch m.list.SelectedItem().(menuItem).Title() {
 			case menuTitleProfile:
-				return m, nil
+				return m, selectProfilePage(m.selectedUser)
 			case menuTitleRepositories:
 				return m, selectRepositoriesPage(m.selectedUser)
 			case menuTitlePullRequests:

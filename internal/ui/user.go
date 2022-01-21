@@ -215,7 +215,3 @@ func (m userSelectModel) View() string {
 
 	return ret
 }
-
-func cn(view string) int {
-	return strings.Count(view, "\n")
-}

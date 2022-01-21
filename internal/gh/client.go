@@ -29,6 +29,9 @@ func NewGitHubClient(cfg *GithubConfig) *GitHubClient {
 type UserProfile struct {
 	Login      string
 	Name       string
+	Bio        string
+	Followers  int
+	Following  int
 	Location   string
 	Company    string
 	WebsiteUrl string
@@ -37,8 +40,15 @@ type UserProfile struct {
 
 type userProfileQuery struct {
 	User struct {
-		Login      githubv4.String
-		Name       githubv4.String
+		Login     githubv4.String
+		Name      githubv4.String
+		Bio       githubv4.String
+		Followers struct {
+			TotalCount githubv4.Int
+		}
+		Following struct {
+			TotalCount githubv4.Int
+		}
 		Location   githubv4.String
 		Company    githubv4.String
 		WebsiteUrl githubv4.String
@@ -50,6 +60,9 @@ func (q *userProfileQuery) toUserProfile() *UserProfile {
 	return &UserProfile{
 		Login:      string(q.User.Login),
 		Name:       string(q.User.Name),
+		Bio:        string(q.User.Bio),
+		Followers:  int(q.User.Followers.TotalCount),
+		Following:  int(q.User.Following.TotalCount),
 		Location:   string(q.User.Location),
 		Company:    string(q.User.Company),
 		WebsiteUrl: string(q.User.WebsiteUrl),

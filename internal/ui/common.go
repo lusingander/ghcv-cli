@@ -1,6 +1,10 @@
 package ui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 const (
 	appTitle = "GHCV"
@@ -28,4 +32,8 @@ func titleView() string {
 	// bubbles/list/styles.go
 	title := titleStyle.Render(appTitle)
 	return titleBarStyle.Render(title)
+}
+
+func cn(view string) int {
+	return strings.Count(view, "\n")
 }
