@@ -1,12 +1,15 @@
 package ui
 
 import (
+	"time"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lusingander/ghcv-cli/internal/gh"
+	"github.com/ymotongpoo/datemaki"
 )
 
 var (
@@ -28,29 +31,6 @@ type repositoriesModel struct {
 	width, height int
 }
 
-// todo: fix
-type repositoryItem struct {
-	title       string
-	description string
-}
-
-var _ list.DefaultItem = (*repositoryItem)(nil)
-
-func (i repositoryItem) Title() string {
-	return i.title
-}
-
-func (i repositoryItem) Description() string {
-	if i.description == "" {
-		return "-"
-	}
-	return i.description
-}
-
-func (i repositoryItem) FilterValue() string {
-	return i.title
-}
-
 type repositoriesDelegateKeyMap struct {
 	back key.Binding
 }
@@ -65,20 +45,10 @@ func newRepositoriesDelegateKeyMap() repositoriesDelegateKeyMap {
 }
 
 func newRepositoriesModel(client *gh.GitHubClient, s *spinner.Model) repositoriesModel {
-	var items []list.Item
-	delegate := list.NewDefaultDelegate()
-
 	delegateKeys := newRepositoriesDelegateKeyMap()
-	delegate.ShortHelpFunc = func() []key.Binding {
-		return []key.Binding{delegateKeys.back}
-	}
-	delegate.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.back}}
-	}
+	delegate := NewRepositoryDelegate(delegateKeys)
 
-	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
-	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
-	l := list.New(items, delegate, 0, 0)
+	l := list.New(nil, delegate, 0, 0)
 	l.Title = appTitle
 	l.Styles.Title = titleStyle
 
@@ -98,10 +68,19 @@ func (m *repositoriesModel) SetSize(width, height int) {
 
 func (m *repositoriesModel) updateItems(repos *gh.UserRepositories) {
 	items := make([]list.Item, len(repos.Repositories))
+	now := time.Now()
 	for i, repo := range repos.Repositories {
+		updated := datemaki.FormatDurationFrom(now, repo.PushedAt)
 		item := &repositoryItem{
 			title:       repo.Name,
 			description: repo.Description,
+			langName:    repo.LangName,
+			langColor:   repo.LangColor,
+			license:     repo.License,
+			updated:     updated,
+			stars:       repo.Stars,
+			forks:       repo.Forks,
+			watchers:    repo.Watchers,
 		}
 		items[i] = item
 	}
