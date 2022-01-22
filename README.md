@@ -23,3 +23,7 @@ export GHCV_GITHUB_ACCESS_TOKEN=<token>
 
 > In this case as well, you don't need to specify anything in the scope (only public information will be accessed).
 
+
+## License
+
+MIT
