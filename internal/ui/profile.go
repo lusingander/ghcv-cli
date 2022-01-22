@@ -28,6 +28,7 @@ var (
 )
 
 type profileKeyMap struct {
+	Open key.Binding
 	Back key.Binding
 	Help key.Binding
 	Quit key.Binding
@@ -35,6 +36,7 @@ type profileKeyMap struct {
 
 func (k profileKeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
+		k.Open,
 		k.Back,
 		k.Help,
 		k.Quit,
@@ -43,6 +45,9 @@ func (k profileKeyMap) ShortHelp() []key.Binding {
 
 func (k profileKeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
+		{
+			k.Open,
+		},
 		{
 			k.Back,
 		},
@@ -68,6 +73,10 @@ type profileModel struct {
 
 func newProfileModel(client *gh.GitHubClient, s *spinner.Model) profileModel {
 	profileKeys := profileKeyMap{
+		Open: key.NewBinding(
+			key.WithKeys("o"),
+			key.WithHelp("o", "open in browser"),
+		),
 		Back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
@@ -126,10 +135,21 @@ func (m profileModel) loadProfile(id string) tea.Cmd {
 	}
 }
 
+func (m profileModel) openProfilePageInBrowser() tea.Cmd {
+	return func() tea.Msg {
+		if err := openBrowser(m.profile.Url); err != nil {
+			return profileErrorMsg{err, "failed to open browser"}
+		}
+		return nil
+	}
+}
+
 func (m profileModel) Update(msg tea.Msg) (profileModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
+		case key.Matches(msg, m.keys.Open):
+			return m, m.openProfilePageInBrowser()
 		case key.Matches(msg, m.keys.Back):
 			return m, goBackMenuPage
 		case key.Matches(msg, m.keys.Help):

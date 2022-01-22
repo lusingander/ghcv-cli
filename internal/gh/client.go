@@ -49,6 +49,7 @@ type UserProfile struct {
 	Company    string
 	WebsiteUrl string
 	AvatarUrl  string
+	Url        string
 }
 
 type userProfileQuery struct {
@@ -66,6 +67,7 @@ type userProfileQuery struct {
 		Company    githubv4.String
 		WebsiteUrl githubv4.String
 		AvatarUrl  githubv4.String
+		Url        githubv4.String
 	} `graphql:"user(login: $login)"`
 }
 
@@ -80,6 +82,7 @@ func (q *userProfileQuery) toUserProfile() *UserProfile {
 		Company:    string(q.User.Company),
 		WebsiteUrl: string(q.User.WebsiteUrl),
 		AvatarUrl:  string(q.User.AvatarUrl),
+		Url:        string(q.User.Url),
 	}
 }
 

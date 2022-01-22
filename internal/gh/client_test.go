@@ -31,6 +31,7 @@ func Test_userProfileQuery_toUserProfile(t *testing.T) {
 			Company    githubv4.String
 			WebsiteUrl githubv4.String
 			AvatarUrl  githubv4.String
+			Url        githubv4.String
 		}{
 			Login: "foo",
 			Name:  "foo bar",
@@ -48,7 +49,8 @@ func Test_userProfileQuery_toUserProfile(t *testing.T) {
 			Location:   "japan",
 			Company:    "baz",
 			WebsiteUrl: "http://example.com/qux",
-			AvatarUrl:  "http://example.com/foo",
+			AvatarUrl:  "http://example.com/foo.png",
+			Url:        "http://example.com/foo",
 		},
 	}
 	want := &UserProfile{
@@ -60,7 +62,8 @@ func Test_userProfileQuery_toUserProfile(t *testing.T) {
 		Location:   "japan",
 		Company:    "baz",
 		WebsiteUrl: "http://example.com/qux",
-		AvatarUrl:  "http://example.com/foo",
+		AvatarUrl:  "http://example.com/foo.png",
+		Url:        "http://example.com/foo",
 	}
 	got := q.toUserProfile()
 	if notEqual(got, want) {
