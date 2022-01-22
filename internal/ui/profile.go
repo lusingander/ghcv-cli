@@ -71,8 +71,8 @@ type profileModel struct {
 func newProfileModel(client *gh.GitHubClient, s *spinner.Model) profileModel {
 	profileKeys := profileKeyMap{
 		Open: key.NewBinding(
-			key.WithKeys("o"),
-			key.WithHelp("o", "open in browser"),
+			key.WithKeys("x"),
+			key.WithHelp("x", "open in browser"),
 		),
 		Back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),

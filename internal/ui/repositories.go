@@ -32,11 +32,16 @@ type repositoriesModel struct {
 }
 
 type repositoriesDelegateKeyMap struct {
+	open key.Binding
 	back key.Binding
 }
 
 func newRepositoriesDelegateKeyMap() repositoriesDelegateKeyMap {
 	return repositoriesDelegateKeyMap{
+		open: key.NewBinding(
+			key.WithKeys("x"),
+			key.WithHelp("x", "open in browser"),
+		),
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
@@ -81,6 +86,7 @@ func (m *repositoriesModel) updateItems(repos *gh.UserRepositories) {
 			stars:       repo.Stars,
 			forks:       repo.Forks,
 			watchers:    repo.Watchers,
+			url:         repo.Url,
 		}
 		items[i] = item
 	}
@@ -118,11 +124,23 @@ func (m repositoriesModel) loadRepositores(id string) tea.Cmd {
 	}
 }
 
+func (m repositoriesModel) openRepositoryPageInBrowser(item *repositoryItem) tea.Cmd {
+	return func() tea.Msg {
+		if err := openBrowser(item.url); err != nil {
+			return profileErrorMsg{err, "failed to open browser"}
+		}
+		return nil
+	}
+}
+
 func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 	cmds := make([]tea.Cmd, 0)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
+		case key.Matches(msg, m.delegateKeys.open):
+			item := m.list.SelectedItem().(*repositoryItem)
+			return m, m.openRepositoryPageInBrowser(item)
 		case key.Matches(msg, m.delegateKeys.back):
 			if m.list.FilterState() != list.Filtering {
 				return m, goBackMenuPage

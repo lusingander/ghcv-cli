@@ -25,6 +25,7 @@ type repositoryItem struct {
 	stars       int
 	forks       int
 	watchers    int
+	url         string
 }
 
 var _ list.Item = (*repositoryItem)(nil)
@@ -54,10 +55,10 @@ func NewRepositoryDelegate(delegateKeys repositoriesDelegateKeyMap) repositoryDe
 	styles.SelectedDesc = styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
 
 	shortHelpFunc := func() []key.Binding {
-		return []key.Binding{delegateKeys.back}
+		return []key.Binding{delegateKeys.open, delegateKeys.back}
 	}
 	fullHelpFunc := func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.open, delegateKeys.back}}
 	}
 
 	normalDescWithoutPadding := styles.NormalDesc.Copy().UnsetPadding()
