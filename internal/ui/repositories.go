@@ -148,7 +148,9 @@ func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.delegateKeys.back):
-			return m, goBackMenuPage
+			if m.list.FilterState() != list.Filtering {
+				return m, goBackMenuPage
+			}
 		}
 	case selectRepositoriesPageMsg:
 		m.loading = true
