@@ -13,9 +13,6 @@ import (
 )
 
 var (
-	profileSpinnerStyle = lipgloss.NewStyle().
-				Padding(2, 0, 0, 2)
-
 	profileErrorStyle = lipgloss.NewStyle().
 				Padding(2, 0, 0, 2).
 				Foreground(lipgloss.Color("161"))
@@ -177,7 +174,7 @@ func (m profileModel) Update(msg tea.Msg) (profileModel, tea.Cmd) {
 
 func (m profileModel) View() string {
 	if m.loading {
-		return m.loadingView()
+		return loadingView(m.height, m.spinner)
 	}
 	if m.errorMsg != nil {
 		return m.errorView()
@@ -233,25 +230,6 @@ func (m profileModel) profieView() string {
 
 	ret += strings.Repeat("\n", height)
 	ret += help
-
-	return ret
-}
-
-func (m profileModel) loadingView() string {
-	if m.height <= 0 {
-		return ""
-	}
-
-	ret := ""
-	height := m.height - 1
-
-	title := titleView()
-	ret += title
-	height -= cn(title)
-
-	sp := profileSpinnerStyle.Render(m.spinner.View() + " Loading...")
-	ret += sp
-	height -= cn(sp)
 
 	return ret
 }

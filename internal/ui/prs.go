@@ -8,12 +8,9 @@ import (
 )
 
 var (
-	pullRequestsSpinnerStyle = lipgloss.NewStyle().
-					Padding(2, 0, 0, 2)
-
 	pullRequestsErrorStyle = lipgloss.NewStyle().
-				Padding(2, 0, 0, 2).
-				Foreground(lipgloss.Color("161"))
+		Padding(2, 0, 0, 2).
+		Foreground(lipgloss.Color("161"))
 )
 
 type pullRequestsInnerPage int
@@ -155,7 +152,7 @@ func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
 
 func (m pullRequestsModel) View() string {
 	if m.loading {
-		return m.loadingView()
+		return loadingView(m.height, m.spinner)
 	}
 	if m.errorMsg != nil {
 		return m.errorView()
@@ -171,25 +168,6 @@ func (m pullRequestsModel) View() string {
 	default:
 		return baseStyle.Render("error... :(")
 	}
-}
-
-func (m pullRequestsModel) loadingView() string {
-	if m.height <= 0 {
-		return ""
-	}
-
-	ret := ""
-	height := m.height - 1
-
-	title := titleView()
-	ret += title
-	height -= cn(title)
-
-	sp := pullRequestsSpinnerStyle.Render(m.spinner.View() + " Loading...")
-	ret += sp
-	height -= cn(sp)
-
-	return ret
 }
 
 func (m pullRequestsModel) errorView() string {

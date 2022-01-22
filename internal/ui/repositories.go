@@ -10,12 +10,9 @@ import (
 )
 
 var (
-	repositoriesSpinnerStyle = lipgloss.NewStyle().
-					Padding(2, 0, 0, 2)
-
 	repositoriesErrorStyle = lipgloss.NewStyle().
-				Padding(2, 0, 0, 2).
-				Foreground(lipgloss.Color("161"))
+		Padding(2, 0, 0, 2).
+		Foreground(lipgloss.Color("161"))
 )
 
 type repositoriesModel struct {
@@ -175,31 +172,12 @@ func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 
 func (m repositoriesModel) View() string {
 	if m.loading {
-		return m.loadingView()
+		return loadingView(m.height, m.spinner)
 	}
 	if m.errorMsg != nil {
 		return m.errorView()
 	}
 	return m.list.View()
-}
-
-func (m repositoriesModel) loadingView() string {
-	if m.height <= 0 {
-		return ""
-	}
-
-	ret := ""
-	height := m.height - 1
-
-	title := titleView()
-	ret += title
-	height -= cn(title)
-
-	sp := repositoriesSpinnerStyle.Render(m.spinner.View() + " Loading...")
-	ret += sp
-	height -= cn(sp)
-
-	return ret
 }
 
 func (m repositoriesModel) errorView() string {
