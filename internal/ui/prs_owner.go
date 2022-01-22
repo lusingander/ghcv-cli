@@ -123,11 +123,12 @@ func (m pullRequestsOwnerModel) Init() tea.Cmd {
 
 func (m pullRequestsOwnerModel) selectPullRequestsOwner(name string) tea.Cmd {
 	return func() tea.Msg {
-		owner := m.prs.Owner(name)
-		if owner == nil {
-			return pullRequestsErrorMsg{nil, "failed to get repositories"}
+		for _, owner := range m.prs.Owners {
+			if owner.Name == name {
+				return selectPullRequestsOwnerMsg{owner}
+			}
 		}
-		return selectPullRequestsOwnerMsg{owner}
+		return pullRequestsErrorMsg{nil, "failed to get owner"}
 	}
 }
 

@@ -30,6 +30,7 @@ type pullRequestsModel struct {
 
 	owner   *pullRequestsOwnerModel
 	repo    *pullRequestsRepositoryModel
+	list    *pullRequestsListModel
 	spinner *spinner.Model
 
 	errorMsg      *pullRequestsErrorMsg
@@ -42,6 +43,7 @@ func newPullRequestsModel(client *gh.GitHubClient, s *spinner.Model) pullRequest
 		client:  client,
 		owner:   newPullRequestsOwnerModel(client),
 		repo:    newPullRequestsRepositoryModel(),
+		list:    newPullRequestsListModel(),
 		spinner: s,
 	}
 }
@@ -51,6 +53,7 @@ func (m *pullRequestsModel) SetSize(width, height int) {
 	m.height = height
 	m.owner.SetSize(width, height)
 	m.repo.SetSize(width, height)
+	m.list.SetSize(width, height)
 }
 
 func (m pullRequestsModel) Init() tea.Cmd {
@@ -86,12 +89,26 @@ type selectPullRequestsOwnerMsg struct {
 
 var _ tea.Msg = (*selectPullRequestsOwnerMsg)(nil)
 
+type selectPullRequestsRepositoryMsg struct {
+	repo *gh.UserPullRequestsRepository
+}
+
+var _ tea.Msg = (*selectPullRequestsRepositoryMsg)(nil)
+
 type goBackPullRequestsOwnerPageMsg struct{}
 
 var _ tea.Msg = (*goBackPullRequestsOwnerPageMsg)(nil)
 
 func goBackPullRequestsOwnerPage() tea.Msg {
 	return goBackPullRequestsOwnerPageMsg{}
+}
+
+type goBackPullRequestsRepositoryPageMsg struct{}
+
+var _ tea.Msg = (*goBackPullRequestsRepositoryPageMsg)(nil)
+
+func goBackPullRequestsRepositoryPage() tea.Msg {
+	return goBackPullRequestsRepositoryPageMsg{}
 }
 
 func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
@@ -103,8 +120,12 @@ func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
 		return m, m.loadPullRequests(msg.id)
 	case selectPullRequestsOwnerMsg:
 		m.currentPage = pullRequestsRepositoryPage
+	case selectPullRequestsRepositoryMsg:
+		m.currentPage = pullRequestsListPage
 	case goBackPullRequestsOwnerPageMsg:
 		m.currentPage = pullRequestsOwnerPage
+	case goBackPullRequestsRepositoryPageMsg:
+		m.currentPage = pullRequestsRepositoryPage
 	case pullRequestsSuccessMsg:
 		m.errorMsg = nil
 		m.loading = false
@@ -123,6 +144,7 @@ func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
 		*m.repo, cmd = m.repo.Update(msg)
 		cmds = append(cmds, cmd)
 	case pullRequestsListPage:
+		*m.list, cmd = m.list.Update(msg)
 		cmds = append(cmds, cmd)
 	default:
 		return m, nil
@@ -145,7 +167,7 @@ func (m pullRequestsModel) View() string {
 	case pullRequestsRepositoryPage:
 		return m.repo.View()
 	case pullRequestsListPage:
-		return ""
+		return m.list.View()
 	default:
 		return baseStyle.Render("error... :(")
 	}
