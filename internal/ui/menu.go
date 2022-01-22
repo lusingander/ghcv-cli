@@ -53,6 +53,7 @@ func newMenuModel() menuModel {
 	l := list.New(items, delegate, 0, 0)
 	l.Title = appTitle
 	l.Styles.Title = titleStyle
+	l.SetFilteringEnabled(false)
 	return menuModel{
 		list:         l,
 		delegateKeys: delegateKeys,
