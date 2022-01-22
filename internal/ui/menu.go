@@ -54,6 +54,7 @@ func newMenuModel() menuModel {
 	l.Title = appTitle
 	l.Styles.Title = titleStyle
 	l.SetFilteringEnabled(false)
+	l.SetShowStatusBar(false)
 	return menuModel{
 		list:         l,
 		delegateKeys: delegateKeys,
