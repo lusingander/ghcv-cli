@@ -129,11 +129,10 @@ func (m userSelectModel) checkUser() tea.Cmd {
 		return nil
 	}
 	return func() tea.Msg {
-		_, err := m.client.QueryUserProfile(id)
-		if err != nil {
-			return userSelectErrorMsg{err, "user not found"}
+		if m.client.ExistUser(id) {
+			return userSelectSuccessMsg{id}
 		}
-		return userSelectSuccessMsg{id}
+		return userSelectErrorMsg{nil, "user not found"}
 	}
 }
 

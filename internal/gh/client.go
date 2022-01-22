@@ -26,6 +26,19 @@ func NewGitHubClient(cfg *GithubConfig) *GitHubClient {
 	}
 }
 
+func (c *GitHubClient) ExistUser(id string) bool {
+	var query struct {
+		User struct {
+			Login githubv4.String
+		} `graphql:"user(login: $login)"`
+	}
+	variables := map[string]interface{}{
+		"login": githubv4.String(id),
+	}
+	err := c.client.Query(context.Background(), &query, variables)
+	return err == nil
+}
+
 type UserProfile struct {
 	Login      string
 	Name       string
