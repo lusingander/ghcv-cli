@@ -50,11 +50,16 @@ func (i pullRequestsOwnerItem) FilterValue() string {
 }
 
 type pullRequestsOwnerDelegateKeyMap struct {
+	open key.Binding
 	back key.Binding
 }
 
 func newPullRequestsOwnerDelegateKeyMap() pullRequestsOwnerDelegateKeyMap {
 	return pullRequestsOwnerDelegateKeyMap{
+		open: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "open"),
+		),
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
@@ -68,10 +73,10 @@ func newPullRequestsOwnerModel(client *gh.GitHubClient) *pullRequestsOwnerModel 
 
 	delegateKeys := newPullRequestsOwnerDelegateKeyMap()
 	delegate.ShortHelpFunc = func() []key.Binding {
-		return []key.Binding{delegateKeys.back}
+		return []key.Binding{delegateKeys.open, delegateKeys.back}
 	}
 	delegate.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.open, delegateKeys.back}}
 	}
 
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
@@ -116,23 +121,35 @@ func (m pullRequestsOwnerModel) Init() tea.Cmd {
 	return nil
 }
 
+func (m pullRequestsOwnerModel) selectPullRequestsOwner(name string) tea.Cmd {
+	return func() tea.Msg {
+		owner := m.prs.Owner(name)
+		if owner == nil {
+			return pullRequestsErrorMsg{nil, "failed to get repositories"}
+		}
+		return selectPullRequestsOwnerMsg{owner}
+	}
+}
+
 func (m pullRequestsOwnerModel) Update(msg tea.Msg) (pullRequestsOwnerModel, tea.Cmd) {
-	cmds := make([]tea.Cmd, 0)
+	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
+		case key.Matches(msg, m.delegateKeys.open):
+			item := m.list.SelectedItem().(pullRequestsOwnerItem)
+			return m, m.selectPullRequestsOwner(item.name)
 		case key.Matches(msg, m.delegateKeys.back):
 			if m.list.FilterState() != list.Filtering {
 				return m, goBackMenuPage
 			}
 		}
+	case pullRequestsSuccessMsg:
+		m.updatePrs(msg.prs)
+		return m, nil
 	}
-
-	list, lCmd := m.list.Update(msg)
-	m.list = list
-	cmds = append(cmds, lCmd)
-
-	return m, tea.Batch(cmds...)
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
 }
 
 func (m pullRequestsOwnerModel) View() string {

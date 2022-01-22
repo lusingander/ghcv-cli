@@ -102,6 +102,15 @@ type UserPullRequests struct {
 	Owners     []*UserPullRequestsOwner
 }
 
+func (p *UserPullRequests) Owner(owner string) *UserPullRequestsOwner {
+	for _, o := range p.Owners {
+		if o.Name == owner {
+			return o
+		}
+	}
+	return nil
+}
+
 type UserPullRequestsOwner struct {
 	Name         string
 	Repositories []*UserPullRequestsRepository

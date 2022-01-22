@@ -20,7 +20,7 @@ type pullRequestsInnerPage int
 
 const (
 	pullRequestsOwnerPage pullRequestsInnerPage = iota
-	pullRequestsRepositoriesPage
+	pullRequestsRepositoryPage
 	pullRequestsListPage
 )
 
@@ -29,6 +29,7 @@ type pullRequestsModel struct {
 	currentPage pullRequestsInnerPage
 
 	owner   *pullRequestsOwnerModel
+	repo    *pullRequestsRepositoryModel
 	spinner *spinner.Model
 
 	errorMsg      *pullRequestsErrorMsg
@@ -40,6 +41,7 @@ func newPullRequestsModel(client *gh.GitHubClient, s *spinner.Model) pullRequest
 	return pullRequestsModel{
 		client:  client,
 		owner:   newPullRequestsOwnerModel(client),
+		repo:    newPullRequestsRepositoryModel(),
 		spinner: s,
 	}
 }
@@ -48,6 +50,7 @@ func (m *pullRequestsModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
 	m.owner.SetSize(width, height)
+	m.repo.SetSize(width, height)
 }
 
 func (m pullRequestsModel) Init() tea.Cmd {
@@ -67,10 +70,6 @@ type pullRequestsErrorMsg struct {
 
 var _ tea.Msg = (*pullRequestsErrorMsg)(nil)
 
-type loadpullRequestsMsg struct{}
-
-var _ tea.Msg = (*loadpullRequestsMsg)(nil)
-
 func (m pullRequestsModel) loadPullRequests(id string) tea.Cmd {
 	return func() tea.Msg {
 		prs, err := m.client.QueryUserPullRequests(id)
@@ -81,8 +80,18 @@ func (m pullRequestsModel) loadPullRequests(id string) tea.Cmd {
 	}
 }
 
-func (m *pullRequestsModel) updatePrs(prs *gh.UserPullRequests) {
-	m.owner.updatePrs(prs)
+type selectPullRequestsOwnerMsg struct {
+	owner *gh.UserPullRequestsOwner
+}
+
+var _ tea.Msg = (*selectPullRequestsOwnerMsg)(nil)
+
+type goBackPullRequestsOwnerPageMsg struct{}
+
+var _ tea.Msg = (*goBackPullRequestsOwnerPageMsg)(nil)
+
+func goBackPullRequestsOwnerPage() tea.Msg {
+	return goBackPullRequestsOwnerPageMsg{}
 }
 
 func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
@@ -92,12 +101,14 @@ func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
 	case selectPullRequestsPageMsg:
 		m.loading = true
 		return m, m.loadPullRequests(msg.id)
+	case selectPullRequestsOwnerMsg:
+		m.currentPage = pullRequestsRepositoryPage
+	case goBackPullRequestsOwnerPageMsg:
+		m.currentPage = pullRequestsOwnerPage
 	case pullRequestsSuccessMsg:
 		m.errorMsg = nil
 		m.loading = false
 		m.currentPage = pullRequestsOwnerPage
-		m.updatePrs(msg.prs)
-		return m, nil
 	case pullRequestsErrorMsg:
 		m.errorMsg = &msg
 		m.loading = false
@@ -108,7 +119,8 @@ func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
 	case pullRequestsOwnerPage:
 		*m.owner, cmd = m.owner.Update(msg)
 		cmds = append(cmds, cmd)
-	case pullRequestsRepositoriesPage:
+	case pullRequestsRepositoryPage:
+		*m.repo, cmd = m.repo.Update(msg)
 		cmds = append(cmds, cmd)
 	case pullRequestsListPage:
 		cmds = append(cmds, cmd)
@@ -130,12 +142,12 @@ func (m pullRequestsModel) View() string {
 	switch m.currentPage {
 	case pullRequestsOwnerPage:
 		return m.owner.View()
-	case pullRequestsRepositoriesPage:
-		return ""
+	case pullRequestsRepositoryPage:
+		return m.repo.View()
 	case pullRequestsListPage:
 		return ""
 	default:
-		return ":("
+		return baseStyle.Render("error... :(")
 	}
 }
 
