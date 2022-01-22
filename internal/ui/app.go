@@ -29,6 +29,7 @@ type model struct {
 	userSelect   userSelectModel
 	menu         menuModel
 	profile      profileModel
+	pullRequests pullRequestsModel
 	repositories repositoriesModel
 
 	spinner *spinner.Model
@@ -43,6 +44,7 @@ func newModel(client *gh.GitHubClient) model {
 		userSelect:   newUserSelectModel(client, &s),
 		menu:         newMenuModel(),
 		profile:      newProfileModel(client, &s),
+		pullRequests: newPullRequestsModel(client, &s),
 		repositories: newRepositoriesModel(client, &s),
 		spinner:      &s,
 	}
@@ -90,6 +92,16 @@ func goBackUserSelectPage() tea.Msg {
 	return goBackUserSelectPageMsg{}
 }
 
+type selectPullRequestsPageMsg struct {
+	id string
+}
+
+var _ tea.Msg = (*selectPullRequestsPageMsg)(nil)
+
+func selectPullRequestsPage(id string) tea.Cmd {
+	return func() tea.Msg { return selectPullRequestsPageMsg{id} }
+}
+
 type goBackMenuPageMsg struct{}
 
 var _ tea.Msg = (*goBackMenuPageMsg)(nil)
@@ -118,6 +130,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.menu.SetSize(width, height)
 		m.userSelect.SetSize(width, height)
 		m.profile.SetSize(width, height)
+		m.pullRequests.SetSize(width, height)
 		m.repositories.SetSize(width, height)
 	case userSelectMsg:
 		m.menu.selectedUser = msg.id
@@ -125,6 +138,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case selectProfilePageMsg:
 		m.currentPage = profilePage
+	case selectPullRequestsPageMsg:
+		m.currentPage = pullRequrstsPage
 	case selectRepositoriesPageMsg:
 		m.currentPage = repositoriesPage
 	case goBackUserSelectPageMsg:
@@ -144,6 +159,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case profilePage:
 		m.profile, cmd = m.profile.Update(msg)
 		cmds = append(cmds, cmd)
+	case pullRequrstsPage:
+		m.pullRequests, cmd = m.pullRequests.Update(msg)
+		cmds = append(cmds, cmd)
 	case repositoriesPage:
 		m.repositories, cmd = m.repositories.Update(msg)
 		cmds = append(cmds, cmd)
@@ -162,6 +180,8 @@ func (m model) View() string {
 		return baseStyle.Render(m.menu.View())
 	case profilePage:
 		return baseStyle.Render(m.profile.View())
+	case pullRequrstsPage:
+		return baseStyle.Render(m.pullRequests.View())
 	case repositoriesPage:
 		return baseStyle.Render(m.repositories.View())
 	}

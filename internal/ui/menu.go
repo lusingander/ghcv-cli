@@ -120,7 +120,7 @@ func (m menuModel) Update(msg tea.Msg) (menuModel, tea.Cmd) {
 			case menuTitleRepositories:
 				return m, selectRepositoriesPage(m.selectedUser)
 			case menuTitlePullRequests:
-				return m, nil
+				return m, selectPullRequestsPage(m.selectedUser)
 			}
 		case key.Matches(msg, m.delegateKeys.back):
 			return m, goBackUserSelectPage
