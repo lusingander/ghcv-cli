@@ -116,7 +116,7 @@ func (m helpModel) Update(msg tea.Msg) (helpModel, tea.Cmd) {
 			case helpTitleAbout:
 				return m, selectAboutPage
 			case helpTitleCredits:
-				// todo
+				return m, selectCreditsPage
 			}
 		case key.Matches(msg, m.delegateKeys.back):
 			return m, goBackMenuPage

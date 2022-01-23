@@ -22,6 +22,7 @@ const (
 	repositoriesPage
 	helpPage
 	aboutPage
+	creditsPage
 )
 
 type model struct {
@@ -35,6 +36,7 @@ type model struct {
 	repositories repositoriesModel
 	help         helpModel
 	about        aboutModel
+	credits      creditsModel
 
 	spinner *spinner.Model
 }
@@ -52,6 +54,7 @@ func newModel(client *gh.GitHubClient) model {
 		repositories: newRepositoriesModel(client, &s),
 		help:         newHelpModel(),
 		about:        newAboutModel(),
+		credits:      newCreditsModel(),
 		spinner:      &s,
 	}
 }
@@ -124,6 +127,14 @@ func selectAboutPage() tea.Msg {
 	return selectAboutPageMsg{}
 }
 
+type selectCreditsPageMsg struct{}
+
+var _ tea.Msg = (*selectCreditsPageMsg)(nil)
+
+func selectCreditsPage() tea.Msg {
+	return selectCreditsPageMsg{}
+}
+
 type goBackMenuPageMsg struct{}
 
 var _ tea.Msg = (*goBackMenuPageMsg)(nil)
@@ -148,6 +159,7 @@ func (m *model) SetSize(width, height int) {
 	m.repositories.SetSize(width, height)
 	m.help.SetSize(width, height)
 	m.about.SetSize(width, height)
+	m.credits.SetSize(width, height)
 }
 
 func (m *model) SetUser(id string) {
@@ -186,6 +198,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentPage = helpPage
 	case selectAboutPageMsg:
 		m.currentPage = aboutPage
+	case selectCreditsPageMsg:
+		m.currentPage = creditsPage
 	case goBackUserSelectPageMsg:
 		m.currentPage = userSelectPage
 	case goBackMenuPageMsg:
@@ -216,6 +230,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case aboutPage:
 		m.about, cmd = m.about.Update(msg)
 		cmds = append(cmds, cmd)
+	case creditsPage:
+		m.credits, cmd = m.credits.Update(msg)
+		cmds = append(cmds, cmd)
 	default:
 		return m, nil
 	}
@@ -239,6 +256,8 @@ func (m model) View() string {
 		return baseStyle.Render(m.help.View())
 	case aboutPage:
 		return baseStyle.Render(m.about.View())
+	case creditsPage:
+		return baseStyle.Render(m.credits.View())
 	}
 	return baseStyle.Render("error... :(")
 }

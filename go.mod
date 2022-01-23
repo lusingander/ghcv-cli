@@ -3,6 +3,7 @@ module github.com/lusingander/ghcv-cli
 go 1.17
 
 require (
+	github.com/Songmu/gocredits v0.2.0
 	github.com/charmbracelet/bubbles v0.10.0
 	github.com/charmbracelet/bubbletea v0.19.3
 	github.com/charmbracelet/lipgloss v0.3.0
