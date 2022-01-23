@@ -15,6 +15,8 @@ type pullRequestsRepositoryModel struct {
 	list         list.Model
 	delegateKeys pullRequestsRepositoryDelegateKeyMap
 
+	selectedUser  string
+	selectedOwner string
 	width, height int
 }
 
@@ -81,9 +83,9 @@ func newPullRequestsRepositoryModel() *pullRequestsRepositoryModel {
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
 	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
 	l := list.New(items, delegate, 0, 0)
-	l.Title = appTitle
-	l.Styles.Title = titleStyle
 	l.KeyMap.Quit = delegateKeys.quit
+	l.SetShowTitle(false)
+	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
 
 	return &pullRequestsRepositoryModel{
@@ -95,7 +97,15 @@ func newPullRequestsRepositoryModel() *pullRequestsRepositoryModel {
 func (m *pullRequestsRepositoryModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
-	m.list.SetSize(width, height)
+	m.list.SetSize(width, height-2)
+}
+
+func (m *pullRequestsRepositoryModel) SetUser(id string) {
+	m.selectedUser = id
+}
+
+func (m *pullRequestsRepositoryModel) setOwner(name string) {
+	m.selectedOwner = name
 }
 
 func (m *pullRequestsRepositoryModel) updateRepos(repos []*gh.UserPullRequestsRepository) {
@@ -119,7 +129,7 @@ func (m pullRequestsRepositoryModel) selectPullRequestsRepository(name string) t
 	return func() tea.Msg {
 		for _, repo := range m.repos {
 			if repo.Name == name {
-				return selectPullRequestsRepositoryMsg{repo}
+				return selectPullRequestsRepositoryMsg{repo, m.selectedOwner}
 			}
 		}
 		return pullRequestsErrorMsg{nil, "failed to get repository"}
@@ -141,6 +151,7 @@ func (m pullRequestsRepositoryModel) Update(msg tea.Msg) (pullRequestsRepository
 		}
 	case selectPullRequestsOwnerMsg:
 		m.updateRepos(msg.owner.Repositories)
+		m.setOwner(msg.owner.Name)
 		return m, nil
 	}
 	m.list, cmd = m.list.Update(msg)
@@ -148,5 +159,9 @@ func (m pullRequestsRepositoryModel) Update(msg tea.Msg) (pullRequestsRepository
 }
 
 func (m pullRequestsRepositoryModel) View() string {
-	return m.list.View()
+	return titleView(m.breadcrumb()) + listView(m.list)
+}
+
+func (m pullRequestsRepositoryModel) breadcrumb() []string {
+	return []string{m.selectedUser, "PRs", m.selectedOwner}
 }

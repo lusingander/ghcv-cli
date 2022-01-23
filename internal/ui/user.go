@@ -175,7 +175,7 @@ func (m userSelectModel) View() string {
 	ret := ""
 	height := m.height - 1
 
-	title := titleView()
+	title := titleView(nil)
 	ret += title
 	height -= cn(title)
 

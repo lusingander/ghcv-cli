@@ -13,7 +13,10 @@ type pullRequestsListModel struct {
 	list         list.Model
 	delegateKeys pullRequestsListDelegateKeyMap
 
-	width, height int
+	selectedUser       string
+	selectedOwner      string
+	selectedRepository string
+	width, height      int
 }
 
 type pullRequestsListItem struct {
@@ -67,9 +70,9 @@ func newPullRequestsListModel() *pullRequestsListModel {
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
 	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
 	l := list.New(items, delegate, 0, 0)
-	l.Title = appTitle
-	l.Styles.Title = titleStyle
 	l.KeyMap.Quit = delegateKeys.quit
+	l.SetShowTitle(false)
+	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
 
 	return &pullRequestsListModel{
@@ -81,7 +84,19 @@ func newPullRequestsListModel() *pullRequestsListModel {
 func (m *pullRequestsListModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
-	m.list.SetSize(width, height)
+	m.list.SetSize(width, height-2)
+}
+
+func (m *pullRequestsListModel) SetUser(id string) {
+	m.selectedUser = id
+}
+
+func (m *pullRequestsListModel) setOwner(name string) {
+	m.selectedOwner = name
+}
+
+func (m *pullRequestsListModel) setRepository(name string) {
+	m.selectedRepository = name
 }
 
 func (m *pullRequestsListModel) updateList(prs []*gh.UserPullRequestsPullRequest) {
@@ -112,6 +127,8 @@ func (m pullRequestsListModel) Update(msg tea.Msg) (pullRequestsListModel, tea.C
 		}
 	case selectPullRequestsRepositoryMsg:
 		m.updateList(msg.repo.PullRequests)
+		m.setRepository(msg.repo.Name)
+		m.setOwner(msg.owner)
 		return m, nil
 	}
 	m.list, cmd = m.list.Update(msg)
@@ -119,5 +136,9 @@ func (m pullRequestsListModel) Update(msg tea.Msg) (pullRequestsListModel, tea.C
 }
 
 func (m pullRequestsListModel) View() string {
-	return m.list.View()
+	return titleView(m.breadcrumb()) + listView(m.list)
+}
+
+func (m pullRequestsListModel) breadcrumb() []string {
+	return []string{m.selectedUser, "PRs", m.selectedOwner, m.selectedRepository}
 }

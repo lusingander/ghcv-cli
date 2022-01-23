@@ -62,6 +62,7 @@ type profileModel struct {
 
 	errorMsg      *profileErrorMsg
 	loading       bool
+	selectedUser  string
 	width, height int
 }
 
@@ -92,6 +93,10 @@ func (m *profileModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
 	m.help.Width = width
+}
+
+func (m *profileModel) SetUser(id string) {
+	m.selectedUser = id
 }
 
 func (m *profileModel) updateProfile(profile *gh.UserProfile) {
@@ -164,7 +169,7 @@ func (m profileModel) Update(msg tea.Msg) (profileModel, tea.Cmd) {
 
 func (m profileModel) View() string {
 	if m.loading {
-		return loadingView(m.height, m.spinner)
+		return loadingView(m.height, m.spinner, m.breadcrumb())
 	}
 	if m.errorMsg != nil {
 		return m.errorView()
@@ -180,7 +185,7 @@ func (m profileModel) profieView() string {
 	ret := ""
 	height := m.height - 1
 
-	title := titleView()
+	title := titleView(m.breadcrumb())
 	ret += title
 	height -= cn(title)
 
@@ -232,7 +237,7 @@ func (m profileModel) errorView() string {
 	ret := ""
 	height := m.height - 1
 
-	title := titleView()
+	title := titleView(m.breadcrumb())
 	ret += title
 	height -= cn(title)
 
@@ -247,4 +252,8 @@ func (m profileModel) errorView() string {
 	ret += help
 
 	return ret
+}
+
+func (m profileModel) breadcrumb() []string {
+	return []string{m.selectedUser, "Profile"}
 }

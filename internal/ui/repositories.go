@@ -28,6 +28,7 @@ type repositoriesModel struct {
 
 	errorMsg      *repositoriesErrorMsg
 	loading       bool
+	selectedUser  string
 	width, height int
 }
 
@@ -59,9 +60,10 @@ func newRepositoriesModel(client *gh.GitHubClient, s *spinner.Model) repositorie
 	delegate := NewRepositoryDelegate(delegateKeys)
 
 	l := list.New(nil, delegate, 0, 0)
-	l.Title = appTitle
-	l.Styles.Title = titleStyle
 	l.KeyMap.Quit = delegateKeys.quit
+	l.SetShowTitle(false)
+	l.SetFilteringEnabled(false)
+	l.SetShowStatusBar(false)
 
 	return repositoriesModel{
 		client:       client,
@@ -74,7 +76,11 @@ func newRepositoriesModel(client *gh.GitHubClient, s *spinner.Model) repositorie
 func (m *repositoriesModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
-	m.list.SetSize(width, height)
+	m.list.SetSize(width, height-2)
+}
+
+func (m *repositoriesModel) SetUser(id string) {
+	m.selectedUser = id
 }
 
 func (m *repositoriesModel) updateItems(repos *gh.UserRepositories) {
@@ -175,12 +181,12 @@ func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 
 func (m repositoriesModel) View() string {
 	if m.loading {
-		return loadingView(m.height, m.spinner)
+		return loadingView(m.height, m.spinner, m.breadcrumb())
 	}
 	if m.errorMsg != nil {
 		return m.errorView()
 	}
-	return m.list.View()
+	return titleView(m.breadcrumb()) + listView(m.list)
 }
 
 func (m repositoriesModel) errorView() string {
@@ -191,7 +197,7 @@ func (m repositoriesModel) errorView() string {
 	ret := ""
 	height := m.height - 1
 
-	title := titleView()
+	title := titleView(m.breadcrumb())
 	ret += title
 	height -= cn(title)
 
@@ -200,4 +206,8 @@ func (m repositoriesModel) errorView() string {
 	height -= cn(errorText)
 
 	return ret
+}
+
+func (m repositoriesModel) breadcrumb() []string {
+	return []string{m.selectedUser, "Repositories"}
 }

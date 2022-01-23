@@ -32,6 +32,7 @@ type pullRequestsModel struct {
 
 	errorMsg      *pullRequestsErrorMsg
 	loading       bool
+	selectedUser  string
 	width, height int
 }
 
@@ -51,6 +52,13 @@ func (m *pullRequestsModel) SetSize(width, height int) {
 	m.owner.SetSize(width, height)
 	m.repo.SetSize(width, height)
 	m.list.SetSize(width, height)
+}
+
+func (m *pullRequestsModel) SetUser(id string) {
+	m.selectedUser = id
+	m.owner.SetUser(id)
+	m.repo.SetUser(id)
+	m.list.SetUser(id)
 }
 
 func (m pullRequestsModel) Init() tea.Cmd {
@@ -87,7 +95,8 @@ type selectPullRequestsOwnerMsg struct {
 var _ tea.Msg = (*selectPullRequestsOwnerMsg)(nil)
 
 type selectPullRequestsRepositoryMsg struct {
-	repo *gh.UserPullRequestsRepository
+	repo  *gh.UserPullRequestsRepository
+	owner string
 }
 
 var _ tea.Msg = (*selectPullRequestsRepositoryMsg)(nil)
@@ -152,7 +161,7 @@ func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
 
 func (m pullRequestsModel) View() string {
 	if m.loading {
-		return loadingView(m.height, m.spinner)
+		return loadingView(m.height, m.spinner, m.breadcrumb())
 	}
 	if m.errorMsg != nil {
 		return m.errorView()
@@ -178,7 +187,7 @@ func (m pullRequestsModel) errorView() string {
 	ret := ""
 	height := m.height - 1
 
-	title := titleView()
+	title := titleView(m.breadcrumb())
 	ret += title
 	height -= cn(title)
 
@@ -187,4 +196,8 @@ func (m pullRequestsModel) errorView() string {
 	height -= cn(errorText)
 
 	return ret
+}
+
+func (m pullRequestsModel) breadcrumb() []string {
+	return []string{m.selectedUser, "PRs"}
 }

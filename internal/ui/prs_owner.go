@@ -15,6 +15,7 @@ type pullRequestsOwnerModel struct {
 	list         list.Model
 	delegateKeys pullRequestsOwnerDelegateKeyMap
 
+	selectedUser  string
 	width, height int
 }
 
@@ -88,8 +89,8 @@ func newPullRequestsOwnerModel(client *gh.GitHubClient) *pullRequestsOwnerModel 
 	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
 	l := list.New(items, delegate, 0, 0)
 	l.Title = appTitle
-	l.Styles.Title = titleStyle
-	l.KeyMap.Quit = delegateKeys.quit
+	l.SetShowTitle(false)
+	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
 
 	return &pullRequestsOwnerModel{
@@ -101,7 +102,11 @@ func newPullRequestsOwnerModel(client *gh.GitHubClient) *pullRequestsOwnerModel 
 func (m *pullRequestsOwnerModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
-	m.list.SetSize(width, height)
+	m.list.SetSize(width, height-2)
+}
+
+func (m *pullRequestsOwnerModel) SetUser(id string) {
+	m.selectedUser = id
 }
 
 func (m *pullRequestsOwnerModel) updatePrs(prs *gh.UserPullRequests) {
@@ -160,5 +165,9 @@ func (m pullRequestsOwnerModel) Update(msg tea.Msg) (pullRequestsOwnerModel, tea
 }
 
 func (m pullRequestsOwnerModel) View() string {
-	return m.list.View()
+	return titleView(m.breadcrumb()) + listView(m.list)
+}
+
+func (m pullRequestsOwnerModel) breadcrumb() []string {
+	return []string{m.selectedUser, "PRs"}
 }

@@ -51,12 +51,11 @@ func newMenuModel() menuModel {
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
 	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
 	l := list.New(items, delegate, 0, 0)
-	l.Title = appTitle
-	l.Styles.Title = titleStyle
 	l.KeyMap.Quit = key.NewBinding(
 		key.WithKeys("ctrl+c", "esc"),
 		key.WithHelp("ctrl+c", "quit"),
 	)
+	l.SetShowTitle(false)
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
 	return menuModel{
@@ -105,7 +104,11 @@ func newMenuDelegateKeyMap() menuDelegateKeyMap {
 func (m *menuModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
-	m.list.SetSize(width, height)
+	m.list.SetSize(width, height-2)
+}
+
+func (m *menuModel) SetUser(id string) {
+	m.selectedUser = id
 }
 
 func (m menuModel) Init() tea.Cmd {
@@ -139,5 +142,9 @@ func (m menuModel) Update(msg tea.Msg) (menuModel, tea.Cmd) {
 }
 
 func (m menuModel) View() string {
-	return m.list.View()
+	return titleView(m.breadcrumb()) + listView(m.list)
+}
+
+func (m menuModel) breadcrumb() []string {
+	return []string{m.selectedUser}
 }

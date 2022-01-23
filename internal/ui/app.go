@@ -111,11 +111,18 @@ func goBackMenuPage() tea.Msg {
 }
 
 func (m *model) SetSize(width, height int) {
-	m.menu.SetSize(width, height)
 	m.userSelect.SetSize(width, height)
+	m.menu.SetSize(width, height)
 	m.profile.SetSize(width, height)
 	m.pullRequests.SetSize(width, height)
 	m.repositories.SetSize(width, height)
+}
+
+func (m *model) SetUser(id string) {
+	m.menu.SetUser(id)
+	m.profile.SetUser(id)
+	m.repositories.SetUser(id)
+	m.pullRequests.SetUser(id)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -135,7 +142,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		top, right, bottom, left := baseStyle.GetMargin()
 		m.SetSize(msg.Width-left-right, msg.Height-top-bottom)
 	case userSelectMsg:
-		m.menu.selectedUser = msg.id
+		m.SetUser(msg.id)
 		m.currentPage = menuPage
 		return m, nil
 	case selectProfilePageMsg:

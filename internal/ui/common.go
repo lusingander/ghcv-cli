@@ -3,6 +3,7 @@ package ui
 import (
 	"strings"
 
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -20,6 +21,13 @@ var (
 			Foreground(lipgloss.Color("229")).
 			Padding(0, 1)
 
+	breadcrumbStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("240")).
+			Padding(0, 0, 0, 2)
+
+	listStyle = lipgloss.NewStyle().
+			MarginTop(1)
+
 	spinnerStyle = lipgloss.NewStyle().
 			Padding(2, 0, 0, 2)
 
@@ -32,13 +40,20 @@ var (
 	selectedColor2 = lipgloss.Color("143")
 )
 
-func titleView() string {
+func titleView(bcs []string) string {
 	// bubbles/list/styles.go
 	title := titleStyle.Render(appTitle)
+	if bcs != nil {
+		title += breadcrumbStyle.Render(strings.Join(bcs, " > "))
+	}
 	return titleBarStyle.Render(title)
 }
 
-func loadingView(height int, s *spinner.Model) string {
+func listView(l list.Model) string {
+	return listStyle.Render(l.View())
+}
+
+func loadingView(height int, s *spinner.Model, bc []string) string {
 	if height <= 0 {
 		return ""
 	}
@@ -46,7 +61,7 @@ func loadingView(height int, s *spinner.Model) string {
 	ret := ""
 	height = height - 1
 
-	title := titleView()
+	title := titleView(bc)
 	ret += title
 	height -= cn(title)
 
