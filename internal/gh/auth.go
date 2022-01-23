@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	oauthClientId  = "" // fixme
+	oauthClientId  = "8f2a9bd8ba029f2a0e17"
 	deviceCodeUrl  = "https://github.com/login/device/code"
 	accessTokenUrl = "https://github.com/login/oauth/access_token"
 	scope          = "" // read-only access to public information
