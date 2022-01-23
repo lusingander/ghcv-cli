@@ -21,6 +21,7 @@ const (
 	pullRequrstsPage
 	repositoriesPage
 	helpPage
+	aboutPage
 )
 
 type model struct {
@@ -33,6 +34,7 @@ type model struct {
 	pullRequests pullRequestsModel
 	repositories repositoriesModel
 	help         helpModel
+	about        aboutModel
 
 	spinner *spinner.Model
 }
@@ -49,6 +51,7 @@ func newModel(client *gh.GitHubClient) model {
 		pullRequests: newPullRequestsModel(client, &s),
 		repositories: newRepositoriesModel(client, &s),
 		help:         newHelpModel(),
+		about:        newAboutModel(),
 		spinner:      &s,
 	}
 }
@@ -113,12 +116,28 @@ func selectHelpPage() tea.Msg {
 	return selectHelpPageMsg{}
 }
 
+type selectAboutPageMsg struct{}
+
+var _ tea.Msg = (*selectAboutPageMsg)(nil)
+
+func selectAboutPage() tea.Msg {
+	return selectAboutPageMsg{}
+}
+
 type goBackMenuPageMsg struct{}
 
 var _ tea.Msg = (*goBackMenuPageMsg)(nil)
 
 func goBackMenuPage() tea.Msg {
 	return goBackMenuPageMsg{}
+}
+
+type goBackHelpPageMsg struct{}
+
+var _ tea.Msg = (*goBackHelpPageMsg)(nil)
+
+func goBackHelpPage() tea.Msg {
+	return goBackHelpPageMsg{}
 }
 
 func (m *model) SetSize(width, height int) {
@@ -128,6 +147,7 @@ func (m *model) SetSize(width, height int) {
 	m.pullRequests.SetSize(width, height)
 	m.repositories.SetSize(width, height)
 	m.help.SetSize(width, height)
+	m.about.SetSize(width, height)
 }
 
 func (m *model) SetUser(id string) {
@@ -164,10 +184,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentPage = repositoriesPage
 	case selectHelpPageMsg:
 		m.currentPage = helpPage
+	case selectAboutPageMsg:
+		m.currentPage = aboutPage
 	case goBackUserSelectPageMsg:
 		m.currentPage = userSelectPage
 	case goBackMenuPageMsg:
 		m.currentPage = menuPage
+	case goBackHelpPageMsg:
+		m.currentPage = helpPage
 	}
 
 	switch m.currentPage {
@@ -188,6 +212,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 	case helpPage:
 		m.help, cmd = m.help.Update(msg)
+		cmds = append(cmds, cmd)
+	case aboutPage:
+		m.about, cmd = m.about.Update(msg)
 		cmds = append(cmds, cmd)
 	default:
 		return m, nil
@@ -210,6 +237,8 @@ func (m model) View() string {
 		return baseStyle.Render(m.repositories.View())
 	case helpPage:
 		return baseStyle.Render(m.help.View())
+	case aboutPage:
+		return baseStyle.Render(m.about.View())
 	}
 	return baseStyle.Render("error... :(")
 }

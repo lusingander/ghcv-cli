@@ -114,7 +114,7 @@ func (m helpModel) Update(msg tea.Msg) (helpModel, tea.Cmd) {
 		case key.Matches(msg, m.delegateKeys.sel):
 			switch m.list.SelectedItem().(helpItem).Title() {
 			case helpTitleAbout:
-				// todo
+				return m, selectAboutPage
 			case helpTitleCredits:
 				// todo
 			}
