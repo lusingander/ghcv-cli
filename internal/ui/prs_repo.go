@@ -19,6 +19,7 @@ type pullRequestsRepositoryModel struct {
 }
 
 type pullRequestsRepositoryDelegateKeyMap struct {
+	open key.Binding
 	sel  key.Binding
 	back key.Binding
 	quit key.Binding
@@ -26,6 +27,10 @@ type pullRequestsRepositoryDelegateKeyMap struct {
 
 func newPullRequestsRepositoryDelegateKeyMap() pullRequestsRepositoryDelegateKeyMap {
 	return pullRequestsRepositoryDelegateKeyMap{
+		open: key.NewBinding(
+			key.WithKeys("x"),
+			key.WithHelp("x", "open in browser"),
+		),
 		sel: key.NewBinding(
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "select"),
@@ -75,7 +80,7 @@ func (m *pullRequestsRepositoryModel) updateRepos(repos []*gh.UserPullRequestsRe
 	m.repos = repos
 	items := make([]list.Item, len(m.repos))
 	for i, repo := range m.repos {
-		item := pullRequestsRepositoryItem{
+		item := &pullRequestsRepositoryItem{
 			name:        repo.Name,
 			description: repo.Description,
 			langName:    repo.LangName,
@@ -103,13 +108,25 @@ func (m pullRequestsRepositoryModel) selectPullRequestsRepository(name string) t
 	}
 }
 
+func (m pullRequestsRepositoryModel) openRepositoryPageInBrowser(item *pullRequestsRepositoryItem) tea.Cmd {
+	return func() tea.Msg {
+		if err := openBrowser(item.url); err != nil {
+			return profileErrorMsg{err, "failed to open browser"}
+		}
+		return nil
+	}
+}
+
 func (m pullRequestsRepositoryModel) Update(msg tea.Msg) (pullRequestsRepositoryModel, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
+		case key.Matches(msg, m.delegateKeys.open):
+			item := m.list.SelectedItem().(*pullRequestsRepositoryItem)
+			return m, m.openRepositoryPageInBrowser(item)
 		case key.Matches(msg, m.delegateKeys.sel):
-			item := m.list.SelectedItem().(pullRequestsRepositoryItem)
+			item := m.list.SelectedItem().(*pullRequestsRepositoryItem)
 			return m, m.selectPullRequestsRepository(item.name)
 		case key.Matches(msg, m.delegateKeys.back):
 			if m.list.FilterState() != list.Filtering {

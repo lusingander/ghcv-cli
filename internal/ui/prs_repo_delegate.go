@@ -50,7 +50,7 @@ func newPullRequestsRepositoryDelegate(delegateKeys pullRequestsRepositoryDelega
 		return []key.Binding{delegateKeys.sel, delegateKeys.back}
 	}
 	fullHelpFunc := func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.sel, delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.open, delegateKeys.sel, delegateKeys.back}}
 	}
 
 	normalDescWithoutPadding := styles.NormalDesc.Copy().UnsetPadding()
@@ -89,7 +89,7 @@ func (d pullRequestsRepositoryDelegate) Render(w io.Writer, m list.Model, index 
 	matchedRunes := []int{}
 	s := &d.styles
 
-	i := item.(pullRequestsRepositoryItem)
+	i := item.(*pullRequestsRepositoryItem)
 	name := i.name
 	desc := i.description
 	if desc == "" {
