@@ -27,7 +27,6 @@ var (
 type profileKeyMap struct {
 	Open key.Binding
 	Back key.Binding
-	Help key.Binding
 	Quit key.Binding
 }
 
@@ -35,7 +34,6 @@ func (k profileKeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
 		k.Open,
 		k.Back,
-		k.Help,
 		k.Quit,
 	}
 }
@@ -49,7 +47,6 @@ func (k profileKeyMap) FullHelp() [][]key.Binding {
 			k.Back,
 		},
 		{
-			k.Help,
 			k.Quit,
 		},
 	}
@@ -77,10 +74,6 @@ func newProfileModel(client *gh.GitHubClient, s *spinner.Model) profileModel {
 		Back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
-		),
-		Help: key.NewBinding(
-			key.WithKeys("?"),
-			key.WithHelp("?", "toggle help"),
 		),
 		Quit: key.NewBinding(
 			key.WithKeys("ctrl+c", "esc"),
@@ -149,9 +142,6 @@ func (m profileModel) Update(msg tea.Msg) (profileModel, tea.Cmd) {
 			return m, m.openProfilePageInBrowser()
 		case key.Matches(msg, m.keys.Back):
 			return m, goBackMenuPage
-		case key.Matches(msg, m.keys.Help):
-			m.help.ShowAll = !m.help.ShowAll
-			return m, nil
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}

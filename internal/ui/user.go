@@ -42,14 +42,12 @@ type userSelectModel struct {
 
 type userSelectKeyMap struct {
 	Enter key.Binding
-	Help  key.Binding
 	Quit  key.Binding
 }
 
 func (k userSelectKeyMap) ShortHelp() []key.Binding {
 	return []key.Binding{
 		k.Enter,
-		k.Help,
 		k.Quit,
 	}
 }
@@ -60,7 +58,6 @@ func (k userSelectKeyMap) FullHelp() [][]key.Binding {
 			k.Enter,
 		},
 		{
-			k.Help,
 			k.Quit,
 		},
 	}
@@ -71,10 +68,6 @@ func newUserSelectModel(client *gh.GitHubClient, s *spinner.Model) userSelectMod
 		Enter: key.NewBinding(
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "confirm"),
-		),
-		Help: key.NewBinding(
-			key.WithKeys("?"),
-			key.WithHelp("?", "toggle help"),
 		),
 		Quit: key.NewBinding(
 			key.WithKeys("ctrl+c", "esc"),
@@ -150,9 +143,6 @@ func (m userSelectModel) Update(msg tea.Msg) (userSelectModel, tea.Cmd) {
 			m.errorMsg = nil
 			m.loading = true
 			return m, cmd
-		case key.Matches(msg, m.keys.Help):
-			m.help.ShowAll = !m.help.ShowAll
-			return m, nil
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
