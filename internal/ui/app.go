@@ -20,6 +20,7 @@ const (
 	profilePage
 	pullRequrstsPage
 	repositoriesPage
+	helpPage
 )
 
 type model struct {
@@ -31,6 +32,7 @@ type model struct {
 	profile      profileModel
 	pullRequests pullRequestsModel
 	repositories repositoriesModel
+	help         helpModel
 
 	spinner *spinner.Model
 }
@@ -46,6 +48,7 @@ func newModel(client *gh.GitHubClient) model {
 		profile:      newProfileModel(client, &s),
 		pullRequests: newPullRequestsModel(client, &s),
 		repositories: newRepositoriesModel(client, &s),
+		help:         newHelpModel(),
 		spinner:      &s,
 	}
 }
@@ -102,6 +105,14 @@ func selectPullRequestsPage(id string) tea.Cmd {
 	return func() tea.Msg { return selectPullRequestsPageMsg{id} }
 }
 
+type selectHelpPageMsg struct{}
+
+var _ tea.Msg = (*selectHelpPageMsg)(nil)
+
+func selectHelpPage() tea.Msg {
+	return selectHelpPageMsg{}
+}
+
 type goBackMenuPageMsg struct{}
 
 var _ tea.Msg = (*goBackMenuPageMsg)(nil)
@@ -116,6 +127,7 @@ func (m *model) SetSize(width, height int) {
 	m.profile.SetSize(width, height)
 	m.pullRequests.SetSize(width, height)
 	m.repositories.SetSize(width, height)
+	m.help.SetSize(width, height)
 }
 
 func (m *model) SetUser(id string) {
@@ -150,6 +162,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.currentPage = pullRequrstsPage
 	case selectRepositoriesPageMsg:
 		m.currentPage = repositoriesPage
+	case selectHelpPageMsg:
+		m.currentPage = helpPage
 	case goBackUserSelectPageMsg:
 		m.currentPage = userSelectPage
 	case goBackMenuPageMsg:
@@ -172,6 +186,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case repositoriesPage:
 		m.repositories, cmd = m.repositories.Update(msg)
 		cmds = append(cmds, cmd)
+	case helpPage:
+		m.help, cmd = m.help.Update(msg)
+		cmds = append(cmds, cmd)
 	default:
 		return m, nil
 	}
@@ -191,6 +208,8 @@ func (m model) View() string {
 		return baseStyle.Render(m.pullRequests.View())
 	case repositoriesPage:
 		return baseStyle.Render(m.repositories.View())
+	case helpPage:
+		return baseStyle.Render(m.help.View())
 	}
 	return baseStyle.Render("error... :(")
 }

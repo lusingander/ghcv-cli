@@ -10,6 +10,7 @@ const (
 	menuTitleProfile      = "Profile"
 	menuTitlePullRequests = "Pull Requests"
 	menuTitleRepositories = "Repositories"
+	menuTitleHelp         = "Help"
 )
 
 type menuModel struct {
@@ -34,6 +35,10 @@ func newMenuModel() menuModel {
 		menuItem{
 			title:       menuTitleRepositories,
 			description: "Show Repositories created by the user",
+		},
+		menuItem{
+			title:       menuTitleHelp,
+			description: "Show help menus",
 		},
 	}
 
@@ -128,6 +133,8 @@ func (m menuModel) Update(msg tea.Msg) (menuModel, tea.Cmd) {
 				return m, selectRepositoriesPage(m.selectedUser)
 			case menuTitlePullRequests:
 				return m, selectPullRequestsPage(m.selectedUser)
+			case menuTitleHelp:
+				return m, selectHelpPage
 			}
 		case key.Matches(msg, m.delegateKeys.back):
 			return m, goBackUserSelectPage
