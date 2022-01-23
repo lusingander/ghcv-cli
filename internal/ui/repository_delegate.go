@@ -104,7 +104,10 @@ func (d repositoryDelegate) Render(w io.Writer, m list.Model, index int, item li
 		desc = "-"
 	}
 
-	detailsLangColor := "⚫ "
+	// U+25CD
+	// U+26AB will be displayed as emoji
+	// U+2B24 is too large
+	detailsLangColor := "◍ "
 	detailsLangColor = lipgloss.NewStyle().Foreground(lipgloss.Color(i.langColor)).Render(detailsLangColor)
 	license := i.license
 	if license == "" {
