@@ -19,16 +19,16 @@ type pullRequestsRepositoryModel struct {
 }
 
 type pullRequestsRepositoryDelegateKeyMap struct {
-	open key.Binding
+	sel  key.Binding
 	back key.Binding
 	quit key.Binding
 }
 
 func newPullRequestsRepositoryDelegateKeyMap() pullRequestsRepositoryDelegateKeyMap {
 	return pullRequestsRepositoryDelegateKeyMap{
-		open: key.NewBinding(
+		sel: key.NewBinding(
 			key.WithKeys("enter"),
-			key.WithHelp("enter", "open"),
+			key.WithHelp("enter", "select"),
 		),
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
@@ -108,7 +108,7 @@ func (m pullRequestsRepositoryModel) Update(msg tea.Msg) (pullRequestsRepository
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.delegateKeys.open):
+		case key.Matches(msg, m.delegateKeys.sel):
 			item := m.list.SelectedItem().(pullRequestsRepositoryItem)
 			return m, m.selectPullRequestsRepository(item.name)
 		case key.Matches(msg, m.delegateKeys.back):

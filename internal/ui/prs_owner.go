@@ -51,16 +51,16 @@ func (i pullRequestsOwnerItem) FilterValue() string {
 }
 
 type pullRequestsOwnerDelegateKeyMap struct {
-	open key.Binding
+	sel  key.Binding
 	back key.Binding
 	quit key.Binding
 }
 
 func newPullRequestsOwnerDelegateKeyMap() pullRequestsOwnerDelegateKeyMap {
 	return pullRequestsOwnerDelegateKeyMap{
-		open: key.NewBinding(
+		sel: key.NewBinding(
 			key.WithKeys("enter"),
-			key.WithHelp("enter", "open"),
+			key.WithHelp("enter", "select"),
 		),
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
@@ -79,10 +79,10 @@ func newPullRequestsOwnerModel(client *gh.GitHubClient) *pullRequestsOwnerModel 
 
 	delegateKeys := newPullRequestsOwnerDelegateKeyMap()
 	delegate.ShortHelpFunc = func() []key.Binding {
-		return []key.Binding{delegateKeys.open, delegateKeys.back}
+		return []key.Binding{delegateKeys.sel, delegateKeys.back}
 	}
 	delegate.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.open, delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.sel, delegateKeys.back}}
 	}
 
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
@@ -148,7 +148,7 @@ func (m pullRequestsOwnerModel) Update(msg tea.Msg) (pullRequestsOwnerModel, tea
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.delegateKeys.open):
+		case key.Matches(msg, m.delegateKeys.sel):
 			item := m.list.SelectedItem().(pullRequestsOwnerItem)
 			return m, m.selectPullRequestsOwner(item.name)
 		case key.Matches(msg, m.delegateKeys.back):

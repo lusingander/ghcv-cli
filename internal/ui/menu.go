@@ -41,10 +41,10 @@ func newMenuModel() menuModel {
 
 	delegateKeys := newMenuDelegateKeyMap()
 	delegate.ShortHelpFunc = func() []key.Binding {
-		return []key.Binding{delegateKeys.open, delegateKeys.back}
+		return []key.Binding{delegateKeys.sel, delegateKeys.back}
 	}
 	delegate.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.open, delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.sel, delegateKeys.back}}
 	}
 
 	// bubbles/list/defaultitem.go
@@ -85,7 +85,7 @@ func (i menuItem) FilterValue() string {
 
 type menuDelegateKeyMap struct {
 	back key.Binding
-	open key.Binding
+	sel  key.Binding
 }
 
 func newMenuDelegateKeyMap() menuDelegateKeyMap {
@@ -94,9 +94,9 @@ func newMenuDelegateKeyMap() menuDelegateKeyMap {
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
 		),
-		open: key.NewBinding(
+		sel: key.NewBinding(
 			key.WithKeys("enter"),
-			key.WithHelp("enter", "open"),
+			key.WithHelp("enter", "select"),
 		),
 	}
 }
@@ -120,7 +120,7 @@ func (m menuModel) Update(msg tea.Msg) (menuModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-		case key.Matches(msg, m.delegateKeys.open):
+		case key.Matches(msg, m.delegateKeys.sel):
 			switch m.list.SelectedItem().(menuItem).Title() {
 			case menuTitleProfile:
 				return m, selectProfilePage(m.selectedUser)

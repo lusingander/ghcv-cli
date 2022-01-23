@@ -47,10 +47,10 @@ func newPullRequestsRepositoryDelegate(delegateKeys pullRequestsRepositoryDelega
 	styles.SelectedDesc = styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
 
 	shortHelpFunc := func() []key.Binding {
-		return []key.Binding{delegateKeys.open, delegateKeys.back}
+		return []key.Binding{delegateKeys.sel, delegateKeys.back}
 	}
 	fullHelpFunc := func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.open, delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.sel, delegateKeys.back}}
 	}
 
 	normalDescWithoutPadding := styles.NormalDesc.Copy().UnsetPadding()
