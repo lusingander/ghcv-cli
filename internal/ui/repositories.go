@@ -34,6 +34,7 @@ type repositoriesModel struct {
 type repositoriesDelegateKeyMap struct {
 	open key.Binding
 	back key.Binding
+	quit key.Binding
 }
 
 func newRepositoriesDelegateKeyMap() repositoriesDelegateKeyMap {
@@ -46,6 +47,10 @@ func newRepositoriesDelegateKeyMap() repositoriesDelegateKeyMap {
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
 		),
+		quit: key.NewBinding(
+			key.WithKeys("ctrl+c", "esc"),
+			key.WithHelp("ctrl+c", "quit"),
+		),
 	}
 }
 
@@ -56,6 +61,7 @@ func newRepositoriesModel(client *gh.GitHubClient, s *spinner.Model) repositorie
 	l := list.New(nil, delegate, 0, 0)
 	l.Title = appTitle
 	l.Styles.Title = titleStyle
+	l.KeyMap.Quit = delegateKeys.quit
 
 	return repositoriesModel{
 		client:       client,

@@ -53,6 +53,10 @@ func newMenuModel() menuModel {
 	l := list.New(items, delegate, 0, 0)
 	l.Title = appTitle
 	l.Styles.Title = titleStyle
+	l.KeyMap.Quit = key.NewBinding(
+		key.WithKeys("ctrl+c", "esc"),
+		key.WithHelp("ctrl+c", "quit"),
+	)
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(false)
 	return menuModel{

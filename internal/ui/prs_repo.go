@@ -46,6 +46,7 @@ func (i pullRequestsRepositoryItem) FilterValue() string {
 type pullRequestsRepositoryDelegateKeyMap struct {
 	open key.Binding
 	back key.Binding
+	quit key.Binding
 }
 
 func newPullRequestsRepositoryDelegateKeyMap() pullRequestsRepositoryDelegateKeyMap {
@@ -57,6 +58,10 @@ func newPullRequestsRepositoryDelegateKeyMap() pullRequestsRepositoryDelegateKey
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
+		),
+		quit: key.NewBinding(
+			key.WithKeys("ctrl+c", "esc"),
+			key.WithHelp("ctrl+c", "quit"),
 		),
 	}
 }
@@ -78,6 +83,7 @@ func newPullRequestsRepositoryModel() *pullRequestsRepositoryModel {
 	l := list.New(items, delegate, 0, 0)
 	l.Title = appTitle
 	l.Styles.Title = titleStyle
+	l.KeyMap.Quit = delegateKeys.quit
 	l.SetShowStatusBar(false)
 
 	return &pullRequestsRepositoryModel{

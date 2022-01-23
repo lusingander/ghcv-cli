@@ -36,6 +36,7 @@ func (i pullRequestsListItem) FilterValue() string {
 
 type pullRequestsListDelegateKeyMap struct {
 	back key.Binding
+	quit key.Binding
 }
 
 func newPullRequestsListDelegateKeyMap() pullRequestsListDelegateKeyMap {
@@ -43,6 +44,10 @@ func newPullRequestsListDelegateKeyMap() pullRequestsListDelegateKeyMap {
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
+		),
+		quit: key.NewBinding(
+			key.WithKeys("ctrl+c", "esc"),
+			key.WithHelp("ctrl+c", "quit"),
 		),
 	}
 }
@@ -64,6 +69,7 @@ func newPullRequestsListModel() *pullRequestsListModel {
 	l := list.New(items, delegate, 0, 0)
 	l.Title = appTitle
 	l.Styles.Title = titleStyle
+	l.KeyMap.Quit = delegateKeys.quit
 	l.SetShowStatusBar(false)
 
 	return &pullRequestsListModel{

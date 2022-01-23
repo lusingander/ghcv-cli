@@ -52,6 +52,7 @@ func (i pullRequestsOwnerItem) FilterValue() string {
 type pullRequestsOwnerDelegateKeyMap struct {
 	open key.Binding
 	back key.Binding
+	quit key.Binding
 }
 
 func newPullRequestsOwnerDelegateKeyMap() pullRequestsOwnerDelegateKeyMap {
@@ -63,6 +64,10 @@ func newPullRequestsOwnerDelegateKeyMap() pullRequestsOwnerDelegateKeyMap {
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
+		),
+		quit: key.NewBinding(
+			key.WithKeys("ctrl+c", "esc"),
+			key.WithHelp("ctrl+c", "quit"),
 		),
 	}
 }
@@ -84,6 +89,7 @@ func newPullRequestsOwnerModel(client *gh.GitHubClient) *pullRequestsOwnerModel 
 	l := list.New(items, delegate, 0, 0)
 	l.Title = appTitle
 	l.Styles.Title = titleStyle
+	l.KeyMap.Quit = delegateKeys.quit
 	l.SetShowStatusBar(false)
 
 	return &pullRequestsOwnerModel{
