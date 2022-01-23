@@ -132,6 +132,8 @@ func (m menuModel) Update(msg tea.Msg) (menuModel, tea.Cmd) {
 		case key.Matches(msg, m.delegateKeys.back):
 			return m, goBackUserSelectPage
 		}
+	case userSelectMsg:
+		m.list.ResetSelected()
 	}
 
 	list, cmd := m.list.Update(msg)

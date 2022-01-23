@@ -157,6 +157,7 @@ func (m pullRequestsOwnerModel) Update(msg tea.Msg) (pullRequestsOwnerModel, tea
 			}
 		}
 	case pullRequestsSuccessMsg:
+		m.list.ResetSelected()
 		m.updatePrs(msg.prs)
 		return m, nil
 	}

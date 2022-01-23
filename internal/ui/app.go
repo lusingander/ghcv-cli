@@ -144,7 +144,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case userSelectMsg:
 		m.SetUser(msg.id)
 		m.currentPage = menuPage
-		return m, nil
 	case selectProfilePageMsg:
 		m.currentPage = profilePage
 	case selectPullRequestsPageMsg:

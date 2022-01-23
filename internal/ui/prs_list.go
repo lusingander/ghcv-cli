@@ -126,6 +126,7 @@ func (m pullRequestsListModel) Update(msg tea.Msg) (pullRequestsListModel, tea.C
 			}
 		}
 	case selectPullRequestsRepositoryMsg:
+		m.list.ResetSelected()
 		m.updateList(msg.repo.PullRequests)
 		m.setRepository(msg.repo.Name)
 		m.setOwner(msg.owner)

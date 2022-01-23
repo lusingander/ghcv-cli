@@ -164,6 +164,7 @@ func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 	case repositoriesSuccessMsg:
 		m.errorMsg = nil
 		m.loading = false
+		m.list.ResetSelected()
 		m.updateItems(msg.repos)
 		return m, nil
 	case repositoriesErrorMsg:
