@@ -376,6 +376,9 @@ func (c *GitHubClient) QueryUserPullRequests(id string) (*UserPullRequests, erro
 			return nil, err
 		}
 		issueCount = int(qq.Search.IssueCount)
+		if issueCount == 0 {
+			break
+		}
 		edges := qq.Search.Edges
 		cursor = string(edges[len(edges)-1].Cursor)
 		total += len(edges)
