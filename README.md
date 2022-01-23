@@ -7,6 +7,10 @@ ghcv-cli makes it easy to view the user-created issues, pull requests, and repos
 - Show a list of pull requests / issues created by the user (to other people's repositories)
 - Show a list of (non-forked) public repositories created by the user
 
+## Installation
+
+`$ go install github.com/lusingander/ghcv-cli/cmd/ghcv@latest`
+
 ## Setup
 
 You will need to authenticate with GitHub in order to use the application because GitHub GraphQL API [requires authentication](https://docs.github.com/en/graphql/guides/forming-calls-with-graphql#authenticating-with-graphql).
@@ -22,7 +26,6 @@ export GHCV_GITHUB_ACCESS_TOKEN=<token>
 ```
 
 > In this case as well, you don't need to specify anything in the scope (only public information will be accessed).
-
 
 ## License
 
