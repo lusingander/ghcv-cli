@@ -111,6 +111,8 @@ func (m creditsModel) Update(msg tea.Msg) (creditsModel, tea.Cmd) {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
+	case selectCreditsPageMsg:
+		m.viewport.GotoTop()
 	}
 	var cmd tea.Cmd
 	m.viewport, cmd = m.viewport.Update(msg)
