@@ -38,6 +38,38 @@ var (
 var (
 	selectedColor1 = lipgloss.Color("142")
 	selectedColor2 = lipgloss.Color("143")
+
+	listNormalTitleColorStyle = lipgloss.NewStyle().
+					Foreground(lipgloss.AdaptiveColor{Light: "#1a1a1a", Dark: "#dddddd"})
+
+	listNormalItemStyle = lipgloss.NewStyle().
+				Padding(0, 0, 0, 2)
+
+	listNormalTitleStyle = listNormalTitleColorStyle.Copy().
+				Padding(0, 0, 0, 2)
+
+	listNormalDescColorStyle = lipgloss.NewStyle().
+					Foreground(lipgloss.AdaptiveColor{Light: "#A49FA5", Dark: "#777777"})
+
+	listNormalDescStyle = listNormalDescColorStyle.Copy().
+				Padding(0, 0, 0, 2)
+
+	listSelectedTitleColorStyle = lipgloss.NewStyle().
+					Foreground(selectedColor1)
+
+	listSelectedItemStyle = lipgloss.NewStyle().
+				Border(lipgloss.NormalBorder(), false, false, false, true).
+				BorderForeground(selectedColor2).
+				Padding(0, 0, 0, 1)
+
+	listSelectedTitleStyle = listSelectedItemStyle.Copy().
+				Foreground(selectedColor1)
+
+	listSelectedDescColorStyle = listSelectedTitleColorStyle.Copy().
+					Foreground(selectedColor2)
+
+	listSelectedDescStyle = listSelectedItemStyle.Copy().
+				Foreground(selectedColor2)
 )
 
 func titleView(bcs []string) string {

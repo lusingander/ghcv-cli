@@ -28,6 +28,38 @@ type repositoryItem struct {
 	url         string
 }
 
+func (i repositoryItem) titleStr() string {
+	return i.title
+}
+
+func (i repositoryItem) descStr() string {
+	if i.description == "" {
+		return "-"
+	}
+	return i.description
+}
+
+func (i repositoryItem) styledLangColor() string {
+	// U+25CD
+	// U+26AB will be displayed as emoji
+	// U+2B24 is too large
+	s := "◍ "
+	style := lipgloss.NewStyle().Foreground(lipgloss.Color(i.langColor))
+	return style.Render(s)
+}
+
+func (i repositoryItem) detailsStr() string {
+	license := i.license
+	if license == "" {
+		license = "-"
+	}
+	return fmt.Sprintf("%s   ⚖ %s   Updated %s", i.langName, license, i.updated)
+}
+
+func (i repositoryItem) countsStr() string {
+	return fmt.Sprintf("⭐ %d   🍴 %d   👀 %d", i.stars, i.forks, i.watchers)
+}
+
 var _ list.Item = (*repositoryItem)(nil)
 
 func (i repositoryItem) FilterValue() string {
@@ -35,22 +67,13 @@ func (i repositoryItem) FilterValue() string {
 }
 
 type repositoryDelegate struct {
-	styles        list.DefaultItemStyles
 	shortHelpFunc func() []key.Binding
 	fullHelpFunc  func() [][]key.Binding
-
-	normalDescWithoutPadding   lipgloss.Style
-	normalDescOnlyPadding      lipgloss.Style
-	selectedDescWithoutPadding lipgloss.Style
-	selectedDescOnlyPadding    lipgloss.Style
 }
 
 var _ list.ItemDelegate = (*repositoryDelegate)(nil)
 
 func NewRepositoryDelegate(delegateKeys repositoriesDelegateKeyMap) repositoryDelegate {
-	styles := list.NewDefaultItemStyles()
-	styles.SelectedTitle = styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
-	styles.SelectedDesc = styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
 
 	shortHelpFunc := func() []key.Binding {
 		return []key.Binding{delegateKeys.open, delegateKeys.back}
@@ -59,19 +82,9 @@ func NewRepositoryDelegate(delegateKeys repositoriesDelegateKeyMap) repositoryDe
 		return [][]key.Binding{{delegateKeys.open, delegateKeys.back}}
 	}
 
-	normalDescWithoutPadding := styles.NormalDesc.Copy().UnsetPadding()
-	normalDescOnlyPadding := lipgloss.NewStyle().Padding(styles.NormalDesc.GetPadding())
-	selectedDescWithoutPadding := styles.SelectedDesc.Copy().UnsetPadding().UnsetBorderStyle()
-	selectedDescOnlyPadding := lipgloss.NewStyle().Padding(styles.SelectedDesc.GetPadding()).Border(styles.SelectedDesc.GetBorder())
-
 	return repositoryDelegate{
-		styles:                     styles,
-		shortHelpFunc:              shortHelpFunc,
-		fullHelpFunc:               fullHelpFunc,
-		normalDescWithoutPadding:   normalDescWithoutPadding,
-		normalDescOnlyPadding:      normalDescOnlyPadding,
-		selectedDescWithoutPadding: selectedDescWithoutPadding,
-		selectedDescOnlyPadding:    selectedDescOnlyPadding,
+		shortHelpFunc: shortHelpFunc,
+		fullHelpFunc:  fullHelpFunc,
 	}
 }
 
@@ -88,47 +101,32 @@ func (d repositoryDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 }
 
 func (d repositoryDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	s := &d.styles
-
 	i := item.(*repositoryItem)
-	title := i.title
-	desc := i.description
-	if desc == "" {
-		desc = "-"
-	}
-
-	// U+25CD
-	// U+26AB will be displayed as emoji
-	// U+2B24 is too large
-	detailsLangColor := "◍ "
-	detailsLangColor = lipgloss.NewStyle().Foreground(lipgloss.Color(i.langColor)).Render(detailsLangColor)
-	license := i.license
-	if license == "" {
-		license = "-"
-	}
-	details := fmt.Sprintf("%s   ⚖ %s   Updated %s", i.langName, license, i.updated)
-
-	counts := fmt.Sprintf("⭐ %d   🍴 %d   👀 %d", i.stars, i.forks, i.watchers)
+	title := i.titleStr()
+	desc := i.descStr()
+	detailsLangColor := i.styledLangColor()
+	details := i.detailsStr()
+	counts := i.countsStr()
 
 	if m.Width() > 0 {
-		textwidth := uint(m.Width() - s.NormalTitle.GetPaddingLeft() - s.NormalTitle.GetPaddingRight())
+		textwidth := uint(m.Width() - listNormalTitleStyle.GetPaddingLeft() - listNormalTitleStyle.GetPaddingRight())
 		title = truncate.StringWithTail(title, textwidth, ellipsis)
 		desc = truncate.StringWithTail(desc, textwidth, ellipsis)
 		// todo: considering max width
 	}
 
 	if index == m.Index() {
-		title = s.SelectedTitle.Render(title)
-		desc = s.SelectedDesc.Render(desc)
-		details = d.selectedDescWithoutPadding.Render(details)
-		details = d.selectedDescOnlyPadding.Render(detailsLangColor + details)
-		counts = s.SelectedDesc.Render(counts)
+		title = listSelectedTitleStyle.Render(title)
+		desc = listSelectedDescStyle.Render(desc)
+		counts = listSelectedDescStyle.Render(counts)
+		details = listSelectedDescColorStyle.Render(details)
+		details = listSelectedItemStyle.Render(detailsLangColor + details)
 	} else {
-		title = s.NormalTitle.Render(title)
-		desc = s.NormalDesc.Render(desc)
-		details = d.normalDescWithoutPadding.Render(details)
-		details = d.normalDescOnlyPadding.Render(detailsLangColor + details)
-		counts = s.NormalDesc.Render(counts)
+		title = listNormalTitleStyle.Render(title)
+		desc = listNormalDescStyle.Render(desc)
+		counts = listNormalDescStyle.Render(counts)
+		details = listNormalDescColorStyle.Render(details)
+		details = listNormalItemStyle.Render(detailsLangColor + details)
 	}
 
 	fmt.Fprintf(w, "%s\n%s\n%s\n%s", title, desc, counts, details)
