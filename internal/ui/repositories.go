@@ -149,6 +149,9 @@ func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 	cmds := make([]tea.Cmd, 0)
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.loading {
+			return m, nil
+		}
 		switch {
 		case key.Matches(msg, m.delegateKeys.open):
 			item := m.list.SelectedItem().(*repositoryItem)

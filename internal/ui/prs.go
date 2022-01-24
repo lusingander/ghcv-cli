@@ -121,6 +121,10 @@ func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
 	var cmd tea.Cmd
 	cmds := make([]tea.Cmd, 0)
 	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		if m.loading {
+			return m, nil
+		}
 	case selectPullRequestsPageMsg:
 		m.loading = true
 		return m, m.loadPullRequests(msg.id)
