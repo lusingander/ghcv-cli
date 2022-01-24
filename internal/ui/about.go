@@ -7,12 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-)
-
-const (
-	appName    = "ghcv"
-	version    = "0.1.0"
-	thisAppUrl = "https://github.com/lusingander/ghcv-cli"
+	"github.com/lusingander/ghcv-cli/internal/ghcv"
 )
 
 var (
@@ -95,7 +90,7 @@ func (m aboutModel) Init() tea.Cmd {
 
 func (m aboutModel) openThisRepositoryPageInBrowser() tea.Cmd {
 	return func() tea.Msg {
-		if err := openBrowser(thisAppUrl); err != nil {
+		if err := openBrowser(ghcv.AppUrl); err != nil {
 			return profileErrorMsg{err, "failed to open browser"}
 		}
 		return nil
@@ -129,15 +124,15 @@ func (m aboutModel) View() string {
 	ret += title
 	height -= cn(title)
 
-	appName := aboutItemAppNameStyle.Render(appName)
+	appName := aboutItemAppNameStyle.Render(ghcv.AppName)
 	ret += appName
 	height -= cn(appName)
 
-	ver := aboutItemStyle.Render("Version " + version)
+	ver := aboutItemStyle.Render("Version " + ghcv.Version)
 	ret += ver
 	height -= cn(ver)
 
-	appUrl := aboutItemUrlStyle.Render(thisAppUrl)
+	appUrl := aboutItemUrlStyle.Render(ghcv.AppUrl)
 	ret += appUrl
 	height -= cn(appUrl)
 
