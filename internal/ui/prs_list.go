@@ -19,24 +19,6 @@ type pullRequestsListModel struct {
 	width, height      int
 }
 
-type pullRequestsListItem struct {
-	name string
-}
-
-var _ list.DefaultItem = (*pullRequestsListItem)(nil)
-
-func (i pullRequestsListItem) Title() string {
-	return i.name
-}
-
-func (i pullRequestsListItem) Description() string {
-	return "-"
-}
-
-func (i pullRequestsListItem) FilterValue() string {
-	return i.name
-}
-
 type pullRequestsListDelegateKeyMap struct {
 	back key.Binding
 	quit key.Binding
@@ -56,20 +38,10 @@ func newPullRequestsListDelegateKeyMap() pullRequestsListDelegateKeyMap {
 }
 
 func newPullRequestsListModel() *pullRequestsListModel {
-	var items []list.Item
-	delegate := list.NewDefaultDelegate()
-
 	delegateKeys := newPullRequestsListDelegateKeyMap()
-	delegate.ShortHelpFunc = func() []key.Binding {
-		return []key.Binding{delegateKeys.back}
-	}
-	delegate.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.back}}
-	}
+	delegate := newPullRequestsListDelegate(delegateKeys)
 
-	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
-	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.Copy().Foreground(selectedColor2).BorderForeground(selectedColor2)
-	l := list.New(items, delegate, 0, 0)
+	l := list.New(nil, delegate, 0, 0)
 	l.KeyMap.Quit = delegateKeys.quit
 	l.SetShowTitle(false)
 	l.SetFilteringEnabled(false)
@@ -103,8 +75,18 @@ func (m *pullRequestsListModel) updateList(prs []*gh.UserPullRequestsPullRequest
 	m.prs = prs
 	items := make([]list.Item, len(m.prs))
 	for i, pr := range m.prs {
+		created := formatDuration(pr.CretaedAt)
+		closed := formatDuration(pr.ClosedAt)
 		item := pullRequestsListItem{
-			name: pr.Title,
+			title:     pr.Title,
+			status:    pr.State,
+			number:    pr.Number,
+			additions: pr.Additions,
+			deletions: pr.Deletions,
+			comments:  pr.Comments,
+			created:   created,
+			closed:    closed,
+			url:       pr.Url,
 		}
 		items[i] = item
 	}
