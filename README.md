@@ -2,9 +2,11 @@
 
 ghcv-cli makes it easy to view the user-created issues, pull requests, and repositories in the terminal.
 
+<img src="./img/image.gif" width=600>
+
 ## About
 
-- Show a list of pull requests / issues created by the user (to other people's repositories)
+- Show a list of pull requests created by the user (to other people's repositories)
 - Show a list of (non-forked) public repositories created by the user
 
 ## Installation
@@ -26,6 +28,25 @@ export GHCV_GITHUB_ACCESS_TOKEN=<token>
 ```
 
 > In this case as well, you don't need to specify anything in the scope (only public information will be accessed).
+
+## Usage
+
+### Pull Requests
+
+You can list all pull requests created by the user (to the user's own repository are not included).
+Pull requests are grouped and displayed by the target repository and its owner.
+
+<img src="./img/pr-owner.png" width=400>
+<img src="./img/pr-repo.png" width=400>
+<img src="./img/pr-list.png" width=400>
+
+### Repositories
+
+You can list all repositories created by the user.
+Only public and not forked repositories will be shown.
+Repositories will be sorted by stars.
+
+<img src="./img/repo.png" width=400>
 
 ## License
 
