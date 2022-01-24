@@ -1,15 +1,12 @@
 package ui
 
 import (
-	"time"
-
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lusingander/ghcv-cli/internal/gh"
-	"github.com/ymotongpoo/datemaki"
 )
 
 var (
@@ -85,9 +82,8 @@ func (m *repositoriesModel) SetUser(id string) {
 
 func (m *repositoriesModel) updateItems(repos *gh.UserRepositories) {
 	items := make([]list.Item, len(repos.Repositories))
-	now := time.Now()
 	for i, repo := range repos.Repositories {
-		updated := datemaki.FormatDurationFrom(now, repo.PushedAt)
+		updated := formatDuration(repo.PushedAt)
 		item := &repositoryItem{
 			title:       repo.Name,
 			description: repo.Description,
