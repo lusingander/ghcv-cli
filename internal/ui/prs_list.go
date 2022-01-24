@@ -20,12 +20,17 @@ type pullRequestsListModel struct {
 }
 
 type pullRequestsListDelegateKeyMap struct {
+	open key.Binding
 	back key.Binding
 	quit key.Binding
 }
 
 func newPullRequestsListDelegateKeyMap() pullRequestsListDelegateKeyMap {
 	return pullRequestsListDelegateKeyMap{
+		open: key.NewBinding(
+			key.WithKeys("x"),
+			key.WithHelp("x", "open in browser"),
+		),
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
@@ -97,11 +102,23 @@ func (m pullRequestsListModel) Init() tea.Cmd {
 	return nil
 }
 
+func (m pullRequestsListModel) openPullRequestPageInBrowser(item pullRequestsListItem) tea.Cmd {
+	return func() tea.Msg {
+		if err := openBrowser(item.url); err != nil {
+			return profileErrorMsg{err, "failed to open browser"}
+		}
+		return nil
+	}
+}
+
 func (m pullRequestsListModel) Update(msg tea.Msg) (pullRequestsListModel, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
+		case key.Matches(msg, m.delegateKeys.open):
+			item := m.list.SelectedItem().(pullRequestsListItem)
+			return m, m.openPullRequestPageInBrowser(item)
 		case key.Matches(msg, m.delegateKeys.back):
 			if m.list.FilterState() != list.Filtering {
 				return m, goBackPullRequestsRepositoryPage
