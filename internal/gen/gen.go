@@ -1,4 +1,4 @@
-//go:generate go run . -output ../internal/ui/credits_gen.go
+//go:generate go run . -output ../ui/credits_gen.go
 package main
 
 // cf: https://github.com/lusingander/fyne-credits-generator
@@ -64,7 +64,7 @@ func newCredit(text string) *credit {
 
 func runGoCredits() (*bytes.Buffer, error) {
 	buf := &bytes.Buffer{}
-	err := gocredits.Run([]string{"../"} /* from root */, buf, os.Stderr)
+	err := gocredits.Run([]string{"../../"} /* from root */, buf, os.Stderr)
 	if err != nil {
 		return nil, err
 	}
