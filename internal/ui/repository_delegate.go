@@ -43,8 +43,6 @@ type repositoryDelegate struct {
 	normalDescOnlyPadding      lipgloss.Style
 	selectedDescWithoutPadding lipgloss.Style
 	selectedDescOnlyPadding    lipgloss.Style
-	dimmedDescWithoutPadding   lipgloss.Style
-	dimmedDescOnlyPadding      lipgloss.Style
 }
 
 var _ list.ItemDelegate = (*repositoryDelegate)(nil)
@@ -65,8 +63,6 @@ func NewRepositoryDelegate(delegateKeys repositoriesDelegateKeyMap) repositoryDe
 	normalDescOnlyPadding := lipgloss.NewStyle().Padding(styles.NormalDesc.GetPadding())
 	selectedDescWithoutPadding := styles.SelectedDesc.Copy().UnsetPadding().UnsetBorderStyle()
 	selectedDescOnlyPadding := lipgloss.NewStyle().Padding(styles.SelectedDesc.GetPadding()).Border(styles.SelectedDesc.GetBorder())
-	dimmedDescWithoutPadding := styles.DimmedDesc.Copy().UnsetPadding()
-	dimmedDescOnlyPadding := lipgloss.NewStyle().Padding(styles.DimmedDesc.GetPadding())
 
 	return repositoryDelegate{
 		styles:                     styles,
@@ -76,8 +72,6 @@ func NewRepositoryDelegate(delegateKeys repositoriesDelegateKeyMap) repositoryDe
 		normalDescOnlyPadding:      normalDescOnlyPadding,
 		selectedDescWithoutPadding: selectedDescWithoutPadding,
 		selectedDescOnlyPadding:    selectedDescOnlyPadding,
-		dimmedDescWithoutPadding:   dimmedDescWithoutPadding,
-		dimmedDescOnlyPadding:      dimmedDescOnlyPadding,
 	}
 }
 
@@ -94,7 +88,6 @@ func (d repositoryDelegate) Update(msg tea.Msg, m *list.Model) tea.Cmd {
 }
 
 func (d repositoryDelegate) Render(w io.Writer, m list.Model, index int, item list.Item) {
-	matchedRunes := []int{}
 	s := &d.styles
 
 	i := item.(*repositoryItem)
@@ -124,39 +117,13 @@ func (d repositoryDelegate) Render(w io.Writer, m list.Model, index int, item li
 		// todo: considering max width
 	}
 
-	var (
-		isSelected  = index == m.Index()
-		emptyFilter = m.FilterState() == list.Filtering && m.FilterValue() == ""
-		isFiltered  = m.FilterState() == list.Filtering || m.FilterState() == list.FilterApplied
-	)
-
-	if isFiltered && index < len(m.VisibleItems()) {
-		matchedRunes = m.MatchesForItem(index)
-	}
-
-	if emptyFilter {
-		title = s.DimmedTitle.Render(title)
-		desc = s.DimmedDesc.Render(desc)
-		details = d.dimmedDescWithoutPadding.Render(details)
-		details = d.dimmedDescOnlyPadding.Render(detailsLangColor + details)
-		counts = s.DimmedDesc.Render(counts)
-	} else if isSelected && m.FilterState() != list.Filtering {
-		if isFiltered {
-			unmatched := s.SelectedTitle.Inline(true)
-			matched := unmatched.Copy().Inherit(s.FilterMatch)
-			title = lipgloss.StyleRunes(title, matchedRunes, matched, unmatched)
-		}
+	if index == m.Index() {
 		title = s.SelectedTitle.Render(title)
 		desc = s.SelectedDesc.Render(desc)
 		details = d.selectedDescWithoutPadding.Render(details)
 		details = d.selectedDescOnlyPadding.Render(detailsLangColor + details)
 		counts = s.SelectedDesc.Render(counts)
 	} else {
-		if isFiltered {
-			unmatched := s.NormalTitle.Inline(true)
-			matched := unmatched.Copy().Inherit(s.FilterMatch)
-			title = lipgloss.StyleRunes(title, matchedRunes, matched, unmatched)
-		}
 		title = s.NormalTitle.Render(title)
 		desc = s.NormalDesc.Render(desc)
 		details = d.normalDescWithoutPadding.Render(details)
