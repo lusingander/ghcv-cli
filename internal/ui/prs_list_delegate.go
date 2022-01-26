@@ -128,7 +128,7 @@ func newPullRequestsListDelegate(delegateKeys pullRequestsListDelegateKeyMap) pu
 		return []key.Binding{delegateKeys.back}
 	}
 	fullHelpFunc := func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.open, delegateKeys.back}}
 	}
 	return pullRequestsListDelegate{
 		shortHelpFunc: shortHelpFunc,
