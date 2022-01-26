@@ -17,9 +17,8 @@ var (
 	aboutItemAppNameStyle = profileItemStyle.Copy().
 				Bold(true)
 
-	aboutItemUrlStyle = profileItemStyle.Copy().
-				Foreground(lipgloss.Color("33")).
-				Underline(true)
+	aboutItemUrlStyle = urlTextStyle.Copy().
+				Padding(1, 0, 1, 2)
 )
 
 type aboutKeyMap struct {

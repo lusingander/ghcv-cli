@@ -33,6 +33,10 @@ var (
 
 	helpStyle = lipgloss.NewStyle().
 			Padding(1, 0, 0, 2)
+
+	urlTextStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("33")).
+			Underline(true)
 )
 
 var (

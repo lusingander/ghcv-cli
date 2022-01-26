@@ -17,9 +17,7 @@ var (
 	creditsRepositoryNameStyle = lipgloss.NewStyle().
 					Bold(true)
 
-	creditsUrlStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("33")).
-			Underline(true)
+	creditsUrlStyle = urlTextStyle.Copy()
 
 	creditsSeparatorStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("240"))
