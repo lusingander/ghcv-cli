@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lusingander/ghcv-cli/internal/gh"
@@ -22,6 +23,9 @@ var (
 
 	profileItemNameStyle = profileItemStyle.Copy().
 				Bold(true)
+
+	profileViewportStyle = lipgloss.NewStyle().
+				Padding(1, 0, 0, 0)
 )
 
 type profileKeyMap struct {
@@ -55,10 +59,11 @@ func (k profileKeyMap) FullHelp() [][]key.Binding {
 type profileModel struct {
 	client *gh.GitHubClient
 
-	keys    profileKeyMap
-	help    help.Model
-	profile *gh.UserProfile
-	spinner *spinner.Model
+	keys     profileKeyMap
+	viewport viewport.Model
+	help     help.Model
+	profile  *gh.UserProfile
+	spinner  *spinner.Model
 
 	errorMsg      *profileErrorMsg
 	loading       bool
@@ -82,10 +87,11 @@ func newProfileModel(client *gh.GitHubClient, s *spinner.Model) profileModel {
 		),
 	}
 	return profileModel{
-		client:  client,
-		keys:    profileKeys,
-		help:    help.New(),
-		spinner: s,
+		client:   client,
+		keys:     profileKeys,
+		viewport: viewport.New(0, 0),
+		help:     help.New(),
+		spinner:  s,
 	}
 }
 
@@ -93,6 +99,8 @@ func (m *profileModel) SetSize(width, height int) {
 	m.width = width
 	m.height = height
 	m.help.Width = width
+	m.viewport.Width = width
+	m.viewport.Height = height - 4
 }
 
 func (m *profileModel) SetUser(id string) {
@@ -101,6 +109,7 @@ func (m *profileModel) SetUser(id string) {
 
 func (m *profileModel) updateProfile(profile *gh.UserProfile) {
 	m.profile = profile
+	m.viewport.SetContent(m.profieContentsView())
 }
 
 func (m profileModel) Init() tea.Cmd {
@@ -164,7 +173,9 @@ func (m profileModel) Update(msg tea.Msg) (profileModel, tea.Cmd) {
 		return m, nil
 	}
 
-	return m, nil
+	var cmd tea.Cmd
+	m.viewport, cmd = m.viewport.Update(msg)
+	return m, cmd
 }
 
 func (m profileModel) View() string {
@@ -189,36 +200,9 @@ func (m profileModel) profieView() string {
 	ret += title
 	height -= cn(title)
 
-	name := profileItemNameStyle.Render(m.profile.Name)
-	ret += name
-	height -= cn(name)
-
-	id := profileItemStyle.Render("@" + m.profile.Login)
-	ret += id
-	height -= cn(id)
-
-	bio := profileItemStyle.Render(m.profile.Bio)
-	ret += bio
-	height -= cn(bio)
-
-	ret += "\n"
-	height -= 1
-
-	ff := profileItemStyle.Render(fmt.Sprintf("%d followers - %d following", m.profile.Followers, m.profile.Following))
-	ret += ff
-	height -= cn(ff)
-
-	company := profileItemStyle.Render("🏢 " + m.profile.Company)
-	ret += company
-	height -= cn(company)
-
-	location := profileItemStyle.Render("🌐 " + m.profile.Location)
-	ret += location
-	height -= cn(location)
-
-	website := profileItemStyle.Render("🔗 " + m.profile.WebsiteUrl)
-	ret += website
-	height -= cn(website)
+	vp := profileViewportStyle.Render(m.viewport.View())
+	ret += vp
+	height -= cn(vp)
 
 	help := helpStyle.Render(m.help.View(m.keys))
 	height -= cn(help)
@@ -226,6 +210,19 @@ func (m profileModel) profieView() string {
 	ret += strings.Repeat("\n", height)
 	ret += help
 
+	return ret
+}
+
+func (m profileModel) profieContentsView() string {
+	ret := ""
+	ret += profileItemNameStyle.Render(m.profile.Name)
+	ret += profileItemStyle.Render("@" + m.profile.Login)
+	ret += profileItemStyle.Render(m.profile.Bio)
+	ret += "\n"
+	ret += profileItemStyle.Render(fmt.Sprintf("%d followers - %d following", m.profile.Followers, m.profile.Following))
+	ret += profileItemStyle.Render("🏢 " + m.profile.Company)
+	ret += profileItemStyle.Render("🌐 " + m.profile.Location)
+	ret += profileItemStyle.Render("🔗 " + m.profile.WebsiteUrl)
 	return ret
 }
 
