@@ -39,13 +39,15 @@ const (
 	profileAccountItem
 	profileCompanyItem
 	profileWebsiteItem
+	numberOfItems // not item
 )
 
 type profileKeyMap struct {
-	Tab  key.Binding
-	Open key.Binding
-	Back key.Binding
-	Quit key.Binding
+	Tab      key.Binding
+	ShiftTab key.Binding
+	Open     key.Binding
+	Back     key.Binding
+	Quit     key.Binding
 }
 
 func (k profileKeyMap) ShortHelp() []key.Binding {
@@ -96,6 +98,10 @@ func newProfileModel(client *gh.GitHubClient, s *spinner.Model) profileModel {
 			key.WithKeys("tab"),
 			key.WithHelp("tab", "select item"),
 		),
+		ShiftTab: key.NewBinding(
+			key.WithKeys("shift+tab"),
+			key.WithHelp("shift+tab", "select item (reverse)"),
+		),
 		Open: key.NewBinding(
 			key.WithKeys("x"),
 			key.WithHelp("x", "open in browser"),
@@ -140,19 +146,23 @@ func (m *profileModel) updateContent() {
 	m.viewport.SetContent(m.profieContentsView())
 }
 
-func (m *profileModel) selectItem() {
+func (m *profileModel) selectItem(reverse bool) {
 	m.keys.Open.SetEnabled(true)
-	m.selectedItem++
+	if reverse {
+		m.selectedItem = ((m.selectedItem-1)%numberOfItems + numberOfItems) % numberOfItems
+	} else {
+		m.selectedItem = (m.selectedItem + 1) % numberOfItems
+	}
 	switch m.selectedItem {
 	case profileAccountItem:
 		// do nothing
 	case profileCompanyItem:
 		if !isOrganizationLogin(m.profile.Company) {
-			m.selectItem()
+			m.selectItem(reverse)
 		}
 	case profileWebsiteItem:
 		if !isUrl(m.profile.WebsiteUrl) {
-			m.selectItem()
+			m.selectItem(reverse)
 		}
 	default:
 		m.selectedItem = profileNotSelectedItem
@@ -212,7 +222,11 @@ func (m profileModel) Update(msg tea.Msg) (profileModel, tea.Cmd) {
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Tab):
-			m.selectItem()
+			m.selectItem(false)
+			m.updateContent()
+			return m, nil
+		case key.Matches(msg, m.keys.ShiftTab):
+			m.selectItem(true)
 			m.updateContent()
 			return m, nil
 		case key.Matches(msg, m.keys.Open):
