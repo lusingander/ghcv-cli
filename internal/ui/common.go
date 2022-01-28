@@ -90,20 +90,13 @@ func listView(l list.Model) string {
 }
 
 func loadingView(height int, s *spinner.Model, bc []string) string {
-	if height <= 0 {
-		return ""
-	}
-
 	ret := ""
-	height = height - 1
 
 	title := titleView(bc)
 	ret += title
-	height -= cn(title)
 
 	sp := spinnerStyle.Render(s.View() + " Loading...")
 	ret += sp
-	height -= cn(sp)
 
 	return ret
 }
