@@ -2,10 +2,13 @@ package ui
 
 import (
 	"errors"
+	"net/url"
 	"os/exec"
 	"runtime"
+	"strings"
 	"time"
 
+	"github.com/lusingander/ghcv-cli/internal/ghcv"
 	"github.com/ymotongpoo/datemaki"
 )
 
@@ -23,4 +26,18 @@ func formatDuration(t time.Time) string {
 	}
 	now := time.Now()
 	return datemaki.FormatDurationFrom(now, t)
+}
+
+func isOrganizationLogin(s string) bool {
+	return strings.HasPrefix(s, "@")
+}
+
+func organigzationUrlFrom(s string) string {
+	login := strings.TrimSpace(strings.TrimLeft(s, "@"))
+	return ghcv.GitHubBaseUrl + login
+}
+
+func isUrl(s string) bool {
+	_, err := url.Parse(s)
+	return err == nil
 }
