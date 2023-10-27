@@ -1,6 +1,6 @@
 module github.com/lusingander/ghcv-cli
 
-go 1.17
+go 1.21
 
 require (
 	github.com/Songmu/gocredits v0.3.0
