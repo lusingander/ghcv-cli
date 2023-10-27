@@ -64,7 +64,7 @@ func newCredit(text string) *credit {
 
 func runGoCredits() (*bytes.Buffer, error) {
 	buf := &bytes.Buffer{}
-	err := gocredits.Run([]string{"../../"} /* from root */, buf, os.Stderr)
+	err := gocredits.Run([]string{"-skip-missing", "../../"} /* from root */, buf, os.Stderr)
 	if err != nil {
 		return nil, err
 	}
