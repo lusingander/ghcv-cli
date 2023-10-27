@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os/exec"
@@ -39,7 +39,7 @@ func postLogin(url string, params url.Values) ([]byte, error) {
 		return nil, fmt.Errorf("unexpected status code: %s", resp.Status)
 	}
 
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }
 
 type deviceCodeResponse struct {
