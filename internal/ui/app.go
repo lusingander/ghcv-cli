@@ -265,5 +265,6 @@ func (m model) View() string {
 func Start(client *gh.GitHubClient) error {
 	m := newModel(client)
 	p := tea.NewProgram(m, tea.WithAltScreen())
-	return p.Start()
+	_, err := p.Run()
+	return err
 }
