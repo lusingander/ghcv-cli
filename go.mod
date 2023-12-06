@@ -9,9 +9,9 @@ require (
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/emirpasic/gods v1.18.1
 	github.com/muesli/reflow v0.3.0
-	github.com/shurcooL/githubv4 v0.0.0-20230704064427-599ae7bbf278
+	github.com/shurcooL/githubv4 v0.0.0-20231126234147-1cffa1f02456
 	github.com/ymotongpoo/datemaki v0.0.0-20210720235720-959860789111
-	golang.org/x/oauth2 v0.13.0
+	golang.org/x/oauth2 v0.15.0
 )
 
 require (
@@ -29,10 +29,10 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/sahilm/fuzzy v0.1.0 // indirect
 	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466 // indirect
-	golang.org/x/sync v0.4.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/term v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sync v0.5.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 )
