@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"sort"
+
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -15,6 +17,15 @@ var (
 		Foreground(lipgloss.Color("161"))
 )
 
+type sortType int
+
+const (
+	sortByStarDesc sortType = iota
+	sortByStarAsc
+	sortByUpdatedDesc
+	sortByUpdatedAsc
+)
+
 type repositoriesModel struct {
 	client *gh.GitHubClient
 
@@ -27,9 +38,12 @@ type repositoriesModel struct {
 	loading       bool
 	selectedUser  string
 	width, height int
+
+	sortType
 }
 
 type repositoriesDelegateKeyMap struct {
+	sort key.Binding
 	open key.Binding
 	back key.Binding
 	quit key.Binding
@@ -37,6 +51,10 @@ type repositoriesDelegateKeyMap struct {
 
 func newRepositoriesDelegateKeyMap() repositoriesDelegateKeyMap {
 	return repositoriesDelegateKeyMap{
+		sort: key.NewBinding(
+			key.WithKeys("s"),
+			key.WithHelp("s", "sort"),
+		),
 		open: key.NewBinding(
 			key.WithKeys("x"),
 			key.WithHelp("x", "open in browser"),
@@ -95,8 +113,46 @@ func (m *repositoriesModel) updateItems(repos *gh.UserRepositories) {
 			forks:       repo.Forks,
 			watchers:    repo.Watchers,
 			url:         repo.Url,
+			pushedAt:    repo.PushedAt,
 		}
 		items[i] = item
+	}
+	m.list.SetItems(items)
+	m.sortType = sortByStarDesc
+}
+
+func (m *repositoriesModel) updateSortType() {
+	switch m.sortType {
+	case sortByStarDesc:
+		m.sortType = sortByStarAsc
+	case sortByStarAsc:
+		m.sortType = sortByUpdatedDesc
+	case sortByUpdatedDesc:
+		m.sortType = sortByUpdatedAsc
+	case sortByUpdatedAsc:
+		m.sortType = sortByStarDesc
+	}
+}
+
+func (m *repositoriesModel) sortItems() {
+	items := m.list.Items()
+	switch m.sortType {
+	case sortByStarDesc:
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].(*repositoryItem).stars > items[j].(*repositoryItem).stars
+		})
+	case sortByStarAsc:
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].(*repositoryItem).stars < items[j].(*repositoryItem).stars
+		})
+	case sortByUpdatedDesc:
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].(*repositoryItem).pushedAt.After(items[j].(*repositoryItem).pushedAt)
+		})
+	case sortByUpdatedAsc:
+		sort.Slice(items, func(i, j int) bool {
+			return items[i].(*repositoryItem).pushedAt.Before(items[j].(*repositoryItem).pushedAt)
+		})
 	}
 	m.list.SetItems(items)
 }
@@ -149,6 +205,11 @@ func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 			return m, nil
 		}
 		switch {
+		case key.Matches(msg, m.delegateKeys.sort):
+			m.updateSortType()
+			m.list.ResetSelected()
+			m.sortItems()
+			return m, nil
 		case key.Matches(msg, m.delegateKeys.open):
 			item := m.list.SelectedItem().(*repositoryItem)
 			return m, m.openRepositoryPageInBrowser(item)

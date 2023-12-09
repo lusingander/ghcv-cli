@@ -3,6 +3,7 @@ package ui
 import (
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -26,6 +27,7 @@ type repositoryItem struct {
 	forks       int
 	watchers    int
 	url         string
+	pushedAt    time.Time
 }
 
 func (i repositoryItem) titleStr() string {
@@ -79,7 +81,7 @@ func NewRepositoryDelegate(delegateKeys repositoriesDelegateKeyMap) repositoryDe
 		return []key.Binding{delegateKeys.open, delegateKeys.back}
 	}
 	fullHelpFunc := func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.open, delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.sort, delegateKeys.open, delegateKeys.back}}
 	}
 
 	return repositoryDelegate{
