@@ -145,6 +145,8 @@ func (m userSelectModel) Update(msg tea.Msg) (userSelectModel, tea.Cmd) {
 			return m, cmd
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
+		default:
+			m.errorMsg = nil
 		}
 	case goBackUserSelectPageMsg:
 		m.Reset()
