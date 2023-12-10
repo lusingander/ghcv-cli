@@ -81,7 +81,7 @@ func NewRepositoryDelegate(delegateKeys repositoriesDelegateKeyMap) repositoryDe
 		return []key.Binding{delegateKeys.open, delegateKeys.back}
 	}
 	fullHelpFunc := func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.sort, delegateKeys.open, delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.sort, delegateKeys.lang, delegateKeys.open, delegateKeys.back}}
 	}
 
 	return repositoryDelegate{
