@@ -51,6 +51,8 @@ Only public and not forked repositories will be shown.
 By default, Repositories will be sorted by stars.
 You can sort by number of stars and last updated.
 
+You can also filter by language.
+
 <img src="./img/repo.png" width=500>
 
 ## License
