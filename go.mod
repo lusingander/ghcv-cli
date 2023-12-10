@@ -1,6 +1,6 @@
 module github.com/lusingander/ghcv-cli
 
-go 1.21
+go 1.21.3
 
 require (
 	github.com/Songmu/gocredits v0.3.0
@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/emirpasic/gods v1.18.1
+	github.com/lusingander/kasane v0.0.0-20231207092011-d7af4a4cf7cf
 	github.com/muesli/reflow v0.3.0
 	github.com/shurcooL/githubv4 v0.0.0-20231126234147-1cffa1f02456
 	github.com/ymotongpoo/datemaki v0.0.0-20210720235720-959860789111

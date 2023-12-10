@@ -9,12 +9,32 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/lusingander/ghcv-cli/internal/gh"
+	"github.com/lusingander/kasane"
 )
 
 var (
 	repositoriesErrorStyle = lipgloss.NewStyle().
-		Padding(2, 0, 0, 2).
-		Foreground(lipgloss.Color("161"))
+				Padding(2, 0, 0, 2).
+				Foreground(lipgloss.Color("161"))
+
+	dialogTitleStyle = lipgloss.NewStyle().
+				Align(lipgloss.Center).
+				Border(lipgloss.NormalBorder(), false, false, true, false).
+				BorderForeground(lipgloss.Color("240"))
+
+	repositoriesSortDialogTitleStyle = dialogTitleStyle.Copy().
+						Width(30)
+
+	repositoriesSortDialogBodyStyle = lipgloss.NewStyle().
+					Padding(0, 2)
+
+	reposirotiesSortDialogStyle = lipgloss.NewStyle().
+					BorderStyle(lipgloss.RoundedBorder())
+
+	repositoriesSortDialogSelectedStyle = lipgloss.NewStyle().
+						Foreground(selectedColor1)
+
+	repositoriesSortDialogNotSelectedStyle = lipgloss.NewStyle()
 )
 
 type sortType int
@@ -32,7 +52,8 @@ type repositoriesModel struct {
 	list    list.Model
 	spinner *spinner.Model
 
-	delegateKeys repositoriesDelegateKeyMap
+	delegateKeys           repositoriesDelegateKeyMap
+	sortDialogDelegateKeys repositoriesSortDialogDelegateKeyMap
 
 	errorMsg      *repositoriesErrorMsg
 	loading       bool
@@ -40,6 +61,7 @@ type repositoriesModel struct {
 	width, height int
 
 	sortType
+	sortDialogOpened bool
 }
 
 type repositoriesDelegateKeyMap struct {
@@ -70,9 +92,33 @@ func newRepositoriesDelegateKeyMap() repositoriesDelegateKeyMap {
 	}
 }
 
+type repositoriesSortDialogDelegateKeyMap struct {
+	next  key.Binding
+	prev  key.Binding
+	close key.Binding
+}
+
+func newRepositoriesSortDialogDelegateKeyMap() repositoriesSortDialogDelegateKeyMap {
+	return repositoriesSortDialogDelegateKeyMap{
+		next: key.NewBinding(
+			key.WithKeys("j"),
+			key.WithHelp("j", "select next"),
+		),
+		prev: key.NewBinding(
+			key.WithKeys("k"),
+			key.WithHelp("k", "select prev"),
+		),
+		close: key.NewBinding(
+			key.WithKeys("s", "esc", "enter"),
+			key.WithHelp("s", "close dialog"),
+		),
+	}
+}
+
 func newRepositoriesModel(client *gh.GitHubClient, s *spinner.Model) repositoriesModel {
 	delegateKeys := newRepositoriesDelegateKeyMap()
 	delegate := NewRepositoryDelegate(delegateKeys)
+	sortDialogDelegateKeys := newRepositoriesSortDialogDelegateKeyMap()
 
 	l := list.New(nil, delegate, 0, 0)
 	l.KeyMap.Quit = delegateKeys.quit
@@ -81,10 +127,11 @@ func newRepositoriesModel(client *gh.GitHubClient, s *spinner.Model) repositorie
 	l.SetShowStatusBar(false)
 
 	return repositoriesModel{
-		client:       client,
-		list:         l,
-		spinner:      s,
-		delegateKeys: delegateKeys,
+		client:                 client,
+		list:                   l,
+		spinner:                s,
+		delegateKeys:           delegateKeys,
+		sortDialogDelegateKeys: sortDialogDelegateKeys,
 	}
 }
 
@@ -121,16 +168,29 @@ func (m *repositoriesModel) updateItems(repos *gh.UserRepositories) {
 	m.sortType = sortByStarDesc
 }
 
-func (m *repositoriesModel) updateSortType() {
-	switch m.sortType {
-	case sortByStarDesc:
-		m.sortType = sortByStarAsc
-	case sortByStarAsc:
-		m.sortType = sortByUpdatedDesc
-	case sortByUpdatedDesc:
-		m.sortType = sortByUpdatedAsc
-	case sortByUpdatedAsc:
-		m.sortType = sortByStarDesc
+func (m *repositoriesModel) updateSortType(reverse bool) {
+	if reverse {
+		switch m.sortType {
+		case sortByStarDesc:
+			m.sortType = sortByUpdatedAsc
+		case sortByStarAsc:
+			m.sortType = sortByStarDesc
+		case sortByUpdatedDesc:
+			m.sortType = sortByStarAsc
+		case sortByUpdatedAsc:
+			m.sortType = sortByUpdatedDesc
+		}
+	} else {
+		switch m.sortType {
+		case sortByStarDesc:
+			m.sortType = sortByStarAsc
+		case sortByStarAsc:
+			m.sortType = sortByUpdatedDesc
+		case sortByUpdatedDesc:
+			m.sortType = sortByUpdatedAsc
+		case sortByUpdatedAsc:
+			m.sortType = sortByStarDesc
+		}
 	}
 }
 
@@ -204,11 +264,24 @@ func (m repositoriesModel) Update(msg tea.Msg) (repositoriesModel, tea.Cmd) {
 		if m.loading {
 			return m, nil
 		}
+		if m.sortDialogOpened {
+			switch {
+			case key.Matches(msg, m.sortDialogDelegateKeys.close):
+				m.sortDialogOpened = false
+			case key.Matches(msg, m.sortDialogDelegateKeys.next):
+				m.list.ResetSelected()
+				m.updateSortType(false)
+				m.sortItems()
+			case key.Matches(msg, m.sortDialogDelegateKeys.prev):
+				m.list.ResetSelected()
+				m.updateSortType(true)
+				m.sortItems()
+			}
+			return m, nil
+		}
 		switch {
 		case key.Matches(msg, m.delegateKeys.sort):
-			m.updateSortType()
-			m.list.ResetSelected()
-			m.sortItems()
+			m.sortDialogOpened = true
 			return m, nil
 		case key.Matches(msg, m.delegateKeys.open):
 			item := m.list.SelectedItem().(*repositoryItem)
@@ -247,7 +320,40 @@ func (m repositoriesModel) View() string {
 	if m.errorMsg != nil {
 		return m.errorView()
 	}
-	return titleView(m.breadcrumb()) + listView(m.list)
+	ret := titleView(m.breadcrumb()) + listView(m.list)
+	if m.sortDialogOpened {
+		return m.withSortDialogView(ret)
+	}
+	return ret
+}
+
+func (m repositoriesModel) withSortDialogView(base string) string {
+	title := repositoriesSortDialogTitleStyle.Render("Sort")
+
+	body := ""
+	body += m.sortKeySelectItemView("Stars (Desc)", sortByStarDesc)
+	body += "\n"
+	body += m.sortKeySelectItemView("Stars (Asc)", sortByStarAsc)
+	body += "\n"
+	body += m.sortKeySelectItemView("Last Updated (Desc)", sortByUpdatedDesc)
+	body += "\n"
+	body += m.sortKeySelectItemView("Last Updated (Asc)", sortByUpdatedAsc)
+	body = repositoriesSortDialogBodyStyle.Render(body)
+
+	dialog := reposirotiesSortDialogStyle.Render(lipgloss.JoinVertical(lipgloss.Left, title, body))
+
+	dw, dh := lipgloss.Size(dialog)
+	top := (m.height / 2) - (dh / 2)
+	left := (m.width / 2) - (dw / 2)
+	return kasane.OverlayString(base, dialog, top, left, kasane.WithPadding(m.width))
+}
+
+func (m repositoriesModel) sortKeySelectItemView(s string, st sortType) string {
+	if m.sortType == st {
+		return repositoriesSortDialogSelectedStyle.Render("> " + s)
+	} else {
+		return repositoriesSortDialogNotSelectedStyle.Render("  " + s)
+	}
 }
 
 func (m repositoriesModel) errorView() string {
