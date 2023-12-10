@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/lusingander/ghcv-cli/internal/ghcv"
-	"github.com/ymotongpoo/datemaki"
+	"github.com/simonhege/timeago"
 )
 
 func openBrowser(url string) error {
@@ -25,7 +25,7 @@ func formatDuration(t time.Time) string {
 		return ""
 	}
 	now := time.Now()
-	return datemaki.FormatDurationFrom(now, t)
+	return timeago.English.FormatRelativeDuration(now.Sub(t))
 }
 
 func isOrganizationLogin(s string) bool {

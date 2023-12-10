@@ -11,7 +11,7 @@ require (
 	github.com/lusingander/kasane v0.0.0-20231207092011-d7af4a4cf7cf
 	github.com/muesli/reflow v0.3.0
 	github.com/shurcooL/githubv4 v0.0.0-20231126234147-1cffa1f02456
-	github.com/ymotongpoo/datemaki v0.0.0-20210720235720-959860789111
+	github.com/simonhege/timeago v1.0.0-rc5
 	golang.org/x/oauth2 v0.15.0
 )
 
