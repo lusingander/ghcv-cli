@@ -47,7 +47,9 @@ Pull requests are grouped and displayed by the target repository and its owner.
 
 You can list all repositories created by the user.
 Only public and not forked repositories will be shown.
-Repositories will be sorted by stars.
+
+By default, Repositories will be sorted by stars.
+You can sort by number of stars and last updated.
 
 <img src="./img/repo.png" width=500>
 
