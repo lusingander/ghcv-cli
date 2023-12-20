@@ -38,6 +38,6 @@ func organigzationUrlFrom(s string) string {
 }
 
 func isUrl(s string) bool {
-	_, err := url.Parse(s)
+	_, err := url.ParseRequestURI(s)
 	return err == nil
 }
