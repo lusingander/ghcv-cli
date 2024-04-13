@@ -59,7 +59,7 @@ func (i repositoryItem) detailsStr() string {
 }
 
 func (i repositoryItem) countsStr() string {
-	return fmt.Sprintf("⭐ %d   🍴 %d   👀 %d", i.stars, i.forks, i.watchers)
+	return fmt.Sprintf("Star: %d / Fork: %d / Watch: %d", i.stars, i.forks, i.watchers)
 }
 
 var _ list.Item = (*repositoryItem)(nil)
