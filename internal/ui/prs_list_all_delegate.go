@@ -47,7 +47,7 @@ func newPullRequestsListAllDelegate(delegateKeys pullRequestsListAllDelegateKeyM
 		return []key.Binding{delegateKeys.back, delegateKeys.tog}
 	}
 	fullHelpFunc := func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.open, delegateKeys.back, delegateKeys.tog}}
+		return [][]key.Binding{{delegateKeys.stat, delegateKeys.open, delegateKeys.back, delegateKeys.tog}}
 	}
 	return pullRequestsListAllDelegate{
 		shortHelpFunc: shortHelpFunc,
