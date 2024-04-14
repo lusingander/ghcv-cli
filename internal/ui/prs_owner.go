@@ -78,7 +78,7 @@ func newPullRequestsOwnerDelegateKeyMap() pullRequestsOwnerDelegateKeyMap {
 	}
 }
 
-func newPullRequestsOwnerModel(client *gh.GitHubClient) *pullRequestsOwnerModel {
+func newPullRequestsOwnerModel() *pullRequestsOwnerModel {
 	var items []list.Item
 	delegate := list.NewDefaultDelegate()
 

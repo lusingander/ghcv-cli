@@ -89,7 +89,7 @@ func listView(l list.Model) string {
 	return listStyle.Render(l.View())
 }
 
-func loadingView(height int, s *spinner.Model, bc []string) string {
+func loadingView(s *spinner.Model, bc []string) string {
 	ret := ""
 
 	title := titleView(bc)

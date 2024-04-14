@@ -259,7 +259,7 @@ func (m profileModel) Update(msg tea.Msg) (profileModel, tea.Cmd) {
 
 func (m profileModel) View() string {
 	if m.loading {
-		return loadingView(m.height, m.spinner, m.breadcrumb())
+		return loadingView(m.spinner, m.breadcrumb())
 	}
 	if m.errorMsg != nil {
 		return m.errorView()

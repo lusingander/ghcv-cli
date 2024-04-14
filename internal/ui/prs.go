@@ -43,7 +43,7 @@ type pullRequestsModel struct {
 func newPullRequestsModel(client *gh.GitHubClient, s *spinner.Model) pullRequestsModel {
 	return pullRequestsModel{
 		client:  client,
-		owner:   newPullRequestsOwnerModel(client),
+		owner:   newPullRequestsOwnerModel(),
 		repo:    newPullRequestsRepositoryModel(),
 		list:    newPullRequestsListModel(),
 		listAll: newPullRequestsListAllModel(),
@@ -200,7 +200,7 @@ func (m pullRequestsModel) Update(msg tea.Msg) (pullRequestsModel, tea.Cmd) {
 
 func (m pullRequestsModel) View() string {
 	if m.loading {
-		return loadingView(m.height, m.spinner, m.breadcrumb())
+		return loadingView(m.spinner, m.breadcrumb())
 	}
 	if m.errorMsg != nil {
 		return m.errorView()
