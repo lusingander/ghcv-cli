@@ -39,9 +39,13 @@ export GHCV_GITHUB_ACCESS_TOKEN=<token>
 You can list all pull requests created by the user (to the user's own repository are not included).
 Pull requests are grouped and displayed by the target repository and its owner.
 
+You can also view all pull requests without grouping and filter by status.
+
 <img src="./img/pr-owner.png" width=500>
 <img src="./img/pr-repo.png" width=500>
 <img src="./img/pr-list.png" width=500>
+<img src="./img/pr-list-all.png" width=500>
+<img src="./img/pr-list-all-status.png" width=500>
 
 ### Repositories
 
@@ -54,6 +58,8 @@ You can sort by number of stars and last updated.
 You can also filter by language.
 
 <img src="./img/repo.png" width=500>
+<img src="./img/repo-lang.png" width=500>
+<img src="./img/repo-sort.png" width=500>
 
 ## License
 
