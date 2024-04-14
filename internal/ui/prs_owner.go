@@ -53,6 +53,7 @@ func (i pullRequestsOwnerItem) FilterValue() string {
 type pullRequestsOwnerDelegateKeyMap struct {
 	sel  key.Binding
 	back key.Binding
+	tog  key.Binding
 	quit key.Binding
 }
 
@@ -65,6 +66,10 @@ func newPullRequestsOwnerDelegateKeyMap() pullRequestsOwnerDelegateKeyMap {
 		back: key.NewBinding(
 			key.WithKeys("backspace", "ctrl+h"),
 			key.WithHelp("backspace", "back"),
+		),
+		tog: key.NewBinding(
+			key.WithKeys("tab"),
+			key.WithHelp("tab", "toggle"),
 		),
 		quit: key.NewBinding(
 			key.WithKeys("ctrl+c", "esc"),
@@ -79,10 +84,10 @@ func newPullRequestsOwnerModel(client *gh.GitHubClient) *pullRequestsOwnerModel 
 
 	delegateKeys := newPullRequestsOwnerDelegateKeyMap()
 	delegate.ShortHelpFunc = func() []key.Binding {
-		return []key.Binding{delegateKeys.sel, delegateKeys.back}
+		return []key.Binding{delegateKeys.sel, delegateKeys.back, delegateKeys.tog}
 	}
 	delegate.FullHelpFunc = func() [][]key.Binding {
-		return [][]key.Binding{{delegateKeys.sel, delegateKeys.back}}
+		return [][]key.Binding{{delegateKeys.sel, delegateKeys.back, delegateKeys.tog}}
 	}
 
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.Copy().Foreground(selectedColor1).BorderForeground(selectedColor2)
@@ -155,6 +160,8 @@ func (m pullRequestsOwnerModel) Update(msg tea.Msg) (pullRequestsOwnerModel, tea
 			if m.list.FilterState() != list.Filtering {
 				return m, goBackMenuPage
 			}
+		case key.Matches(msg, m.delegateKeys.tog):
+			return m, togglePullRequestsListAll(m.prs)
 		}
 	case pullRequestsSuccessMsg:
 		m.list.ResetSelected()
