@@ -56,7 +56,7 @@ func newPullRequestsRepositoryDelegate(delegateKeys pullRequestsRepositoryDelega
 	normalDescWithoutPadding := styles.NormalDesc.Copy().UnsetPadding()
 	normalDescOnlyPadding := lipgloss.NewStyle().Padding(styles.NormalDesc.GetPadding())
 	selectedDescWithoutPadding := styles.SelectedDesc.Copy().UnsetPadding().UnsetBorderStyle()
-	selectedDescOnlyPadding := lipgloss.NewStyle().Padding(styles.SelectedDesc.GetPadding()).Border(styles.SelectedDesc.GetBorder())
+	selectedDescOnlyPadding := lipgloss.NewStyle().Padding(styles.SelectedDesc.GetPadding()).Border(styles.SelectedDesc.GetBorder()).BorderForeground(styles.SelectedDesc.GetBorderLeftForeground())
 	dimmedDescWithoutPadding := styles.DimmedDesc.Copy().UnsetPadding()
 	dimmedDescOnlyPadding := lipgloss.NewStyle().Padding(styles.DimmedDesc.GetPadding())
 
