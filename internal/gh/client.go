@@ -151,18 +151,12 @@ type userPullRequestsQueryEdge struct {
 	Cursor githubv4.String
 	Node   struct {
 		PullRequest struct {
-			Title     githubv4.String
-			State     githubv4.String
-			Number    githubv4.Int
-			Url       githubv4.String
-			Additions githubv4.Int
-			Deletions githubv4.Int
-			Comments  struct {
-				TotalCount githubv4.Int
-			}
-			Reviews struct {
-				TotalCount githubv4.Int
-			}
+			Title      githubv4.String
+			State      githubv4.String
+			Number     githubv4.Int
+			Url        githubv4.String
+			Additions  githubv4.Int
+			Deletions  githubv4.Int
 			CreatedAt  githubv4.DateTime
 			ClosedAt   githubv4.DateTime
 			Repository userPullRequestsQueryRepository
@@ -323,7 +317,6 @@ func (q *userPullRequestsQuery) toUserPullRequests() *UserPullRequests {
 			Url:       string(pn.Url),
 			Additions: int(pn.Additions),
 			Deletions: int(pn.Deletions),
-			Comments:  int(pn.Comments.TotalCount),
 			CretaedAt: pn.CreatedAt.Time,
 			ClosedAt:  pn.ClosedAt.Time,
 		}
